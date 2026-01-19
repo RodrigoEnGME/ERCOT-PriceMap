@@ -4,7 +4,9 @@ from app.schemas.schemas import (
     Token, TokenData, LoginRequest,
     NodeBase, NodeCreate, NodeUpdate, NodeResponse, NodeWithLatestPrice,
     PriceRecordBase, PriceRecordCreate, PriceRecordResponse, PriceRecordWithNode,
-    TimeSeriesData, NodePriceEvolution, PriceDistribution, CongestionData,
+    TimeSeriesData, NodePriceEvolution, YearlyComparison, NodeYearlyComparison,
+    MonthlyComparison, NodeMonthlyComparison,
+    PriceDistribution, NodePricePoint, AllNodesPriceDistribution, CongestionData,
     AggregatedStats, PriceQueryFilters, AvailableYears,
     PaginatedResponse, ExportRequest
 )
@@ -15,7 +17,9 @@ __all__ = [
     "Token", "TokenData", "LoginRequest",
     "NodeBase", "NodeCreate", "NodeUpdate", "NodeResponse", "NodeWithLatestPrice",
     "PriceRecordBase", "PriceRecordCreate", "PriceRecordResponse", "PriceRecordWithNode",
-    "TimeSeriesData", "NodePriceEvolution", "PriceDistribution", "CongestionData",
+    "TimeSeriesData", "NodePriceEvolution", "YearlyComparison", "NodeYearlyComparison",
+    "MonthlyComparison", "NodeMonthlyComparison",
+    "PriceDistribution", "NodePricePoint", "AllNodesPriceDistribution", "CongestionData",
     "AggregatedStats", "PriceQueryFilters", "AvailableYears",
     "PaginatedResponse", "ExportRequest"
 ]

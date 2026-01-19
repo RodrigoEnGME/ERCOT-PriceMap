@@ -20,6 +20,7 @@ import PriceDistributionChart from '../../components/PriceDistributionChart';
 import CongestionChart from '../../components/CongestionChart';
 import { priceService } from '../../services/priceService';
 import { AggregatedStats } from '../../types';
+import AreaStatusIndicator from '../../components/AreaStatusIndicator';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -106,7 +107,21 @@ const Dashboard: React.FC = () => {
     };
   };
 
+  const getYearRange = () => {
+    if (!selectedYear) return { start: '', end: '' };
+    
+    // Siempre retorna el año completo: 1 de enero 0:00:00 a 31 de diciembre 23:59:59
+    const start = new Date(selectedYear, 0, 1, 0, 0, 0);
+    const end = new Date(selectedYear, 11, 31, 23, 59, 59);
+    
+    return {
+      start: start.toISOString(),
+      end: end.toISOString(),
+    };
+  };
+
   const dateRange = getDateRange();
+  const yearRange = getYearRange();
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -149,10 +164,15 @@ const Dashboard: React.FC = () => {
           <PriceHeatmap timestamp={getHeatmapTimestamp()} market={market} />
         </Paper>
 
+        {/* Area Status Indicator */}
+        <Box sx={{ p: 3, ml: '20px' }}>
+          <AreaStatusIndicator timestamp={getHeatmapTimestamp()} market={market} />
+        </Box>
+
         {/* Contenedor con padding para el resto del contenido */}
         <Box sx={{ p: 3, ml: '20px' }}>
           {/* Stats Cards */}
-          {stats && (
+          {/* {stats && (
             <Grid container spacing={2} sx={{ mb: 3 }}>
               <Grid size={{ xs: 12, sm: 3 }}>
                 <Card>
@@ -201,32 +221,32 @@ const Dashboard: React.FC = () => {
                 </Card>
               </Grid>
             </Grid>
-          )}
+          )} */}
 
           {/* Charts Grid */}
           <Grid container spacing={3}>
-          {selectedNode1 && (
+          {selectedNode1 && selectedYear && selectedDay !== undefined && selectedHour !== undefined && (
             <>
               <Grid size={{ xs: 12, lg: 6 }}>
                 <PriceEvolutionChart
                   nodeId={selectedNode1}
-                  startDate={dateRange.start}
-                  endDate={dateRange.end}
+                  year={selectedYear}
+                  day={selectedDay}
+                  hour={selectedHour}
                   dataType={dataType}
                 />
               </Grid>
               <Grid size={{ xs: 12, lg: 6 }}>
                 <PriceDistributionChart
-                  nodeId={selectedNode1}
-                  startDate={dateRange.start}
-                  endDate={dateRange.end}
+                  timestamp={getHeatmapTimestamp()}
+                  market={market}
                   dataType={dataType}
                 />
               </Grid>
             </>
           )}
 
-          {selectedNode1 && selectedNode2 && (
+          {/* {selectedNode1 && selectedNode2 && (
             <Grid size={{ xs: 12 }}>
               <CongestionChart
                 node1Id={selectedNode1}
@@ -235,7 +255,7 @@ const Dashboard: React.FC = () => {
                 endDate={dateRange.end}
               />
             </Grid>
-          )}
+          )} */}
         </Grid>
         </Box>
         {/* Fin del contenedor con padding */}

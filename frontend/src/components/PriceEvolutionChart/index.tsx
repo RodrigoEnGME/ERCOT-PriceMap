@@ -2,35 +2,52 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { priceService } from '../../services/priceService';
-import { NodePriceEvolution, DataType } from '../../types';
-import { format, parseISO } from 'date-fns';
+import { DataType } from '../../types';
 
 interface Props {
   nodeId: number;
-  startDate: string;
-  endDate: string;
+  year: number;
+  day: number;
+  hour: number;
   dataType: DataType;
 }
 
-const PriceEvolutionChart: React.FC<Props> = ({ nodeId, startDate, endDate, dataType }) => {
-  const [data, setData] = useState<NodePriceEvolution | null>(null);
+interface MonthlyData {
+  month: number;
+  value: number | null;
+}
+
+interface MonthlyComparisonData {
+  node_id: number;
+  node_code: string;
+  node_name: string;
+  year: number;
+  day: number;
+  hour: number;
+  data: MonthlyData[];
+}
+
+const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataType }) => {
+  const [data, setData] = useState<MonthlyComparisonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (nodeId) {
+    if (nodeId && year && day !== undefined && hour !== undefined) {
       loadData();
     }
-  }, [nodeId, startDate, endDate, dataType]);
+  }, [nodeId, year, day, hour, dataType]);
 
   const loadData = async () => {
     setLoading(true);
     setError('');
     try {
-      const evolution = await priceService.getPriceEvolution(nodeId, startDate, endDate, dataType);
-      setData(evolution);
+      const comparison = await priceService.getMonthlyComparison(nodeId, year, day, hour, dataType);
+      setData(comparison);
     } catch (err: any) {
-      setError('Failed to load price evolution');
+      setError('Failed to load monthly comparison');
       console.error(err);
     } finally {
       setLoading(false);
@@ -56,51 +73,58 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, startDate, endDate, data
   if (!data || data.data.length === 0) {
     return (
       <Box p={2}>
-        <Typography>No data available for selected period</Typography>
+        <Typography>No hay datos disponibles para el día {day} a las {hour}:00 en {year}</Typography>
       </Box>
     );
   }
 
   const chartData = data.data.map((item) => ({
-    timestamp: format(parseISO(item.timestamp), 'MM/dd HH:mm'),
+    month: MONTH_NAMES[item.month - 1],
     value: item.value,
   }));
 
   const getLabel = () => {
     switch (dataType) {
       case DataType.PRICE:
-        return 'Price ($/MWh)';
+        return 'Precio ($/MWh)';
       case DataType.SOLAR_CAPTURE:
-        return 'Solar Capture (MW)';
+        return 'Captura Solar (MW)';
       case DataType.WIND_CAPTURE:
-        return 'Wind Capture (MW)';
+        return 'Captura Eólica (MW)';
     }
   };
 
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
-        {data.node_name} - {getLabel()}
+        {data.node_name} - Comparación Mensual {year}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        {getLabel()} para día {day} a las {hour}:00 hrs de cada mes
       </Typography>
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
-            dataKey="timestamp" 
+            dataKey="month" 
             tick={{ fontSize: 12 }}
-            angle={-45}
-            textAnchor="end"
-            height={80}
           />
-          <YAxis tick={{ fontSize: 12 }} />
-          <Tooltip />
+          <YAxis 
+            tick={{ fontSize: 12 }}
+            label={{ value: getLabel(), angle: -90, position: 'insideLeft' }}
+          />
+          <Tooltip 
+            formatter={(value: any) => value != null ? value.toFixed(2) : 'Sin datos'}
+          />
           <Legend />
           <Line 
             type="monotone" 
             dataKey="value" 
             stroke="#1976d2" 
             name={getLabel()}
-            dot={false}
+            connectNulls={false}
+            strokeWidth={2}
+            dot={{ r: 4 }}
           />
         </LineChart>
       </ResponsiveContainer>

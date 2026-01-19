@@ -62,8 +62,8 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
   }, []);
 
   const initializeDefaultValues = () => {
-    // Setear fecha por defecto: 2025-12-15T09:00
-    const defaultDate = new Date('2025-12-15T09:00:00');
+    // Setear fecha por defecto: 2025-12-01T09:00
+    const defaultDate = new Date('2025-12-01T09:00:00');
     setDate(defaultDate);
     setYear(defaultDate.getFullYear());
     setMonth(defaultDate.getMonth() + 1);
@@ -79,12 +79,12 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
       
       // Setear nodos por defecto si hay al menos 2 nodos
       if (nodeList.length >= 2) {
-        setNode1(nodeList[0].id);
-        setNode2(nodeList[1].id);
-        console.log('Default nodes set:', nodeList[0].code, nodeList[1].code);
+        setNode1(nodeList[18].id);
+        setNode2(nodeList[20].id);
+        console.log('Default nodes set:', nodeList[18].code, nodeList[20].code);
       } else if (nodeList.length === 1) {
-        setNode1(nodeList[0].id);
-        console.log('Default node 1 set:', nodeList[0].code);
+        setNode1(nodeList[18].id);
+        console.log('Default node 1 set:', nodeList[18].code);
       }
       
       if (nodeList.length === 0) {

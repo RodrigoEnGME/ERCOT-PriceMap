@@ -163,11 +163,59 @@ class NodePriceEvolution(BaseModel):
     data: List[TimeSeriesData]
 
 
+class YearlyComparison(BaseModel):
+    """Price data for a specific year."""
+    year: int
+    value: float
+
+
+class MonthlyComparison(BaseModel):
+    """Price data for a specific month."""
+    month: int
+    value: Optional[float]
+
+
+class NodeYearlyComparison(BaseModel):
+    """Price comparison across years for same date/hour."""
+    node_id: int
+    node_code: str
+    node_name: str
+    month: int
+    day: int
+    hour: int
+    data: List[YearlyComparison]
+
+
+class NodeMonthlyComparison(BaseModel):
+    """Price comparison across months for same day/hour in a year."""
+    node_id: int
+    node_code: str
+    node_name: str
+    year: int
+    day: int
+    hour: int
+    data: List[MonthlyComparison]
+
+
+class NodePricePoint(BaseModel):
+    """Single node price point."""
+    node_id: int
+    node_code: str
+    node_name: str
+    price: float
+
+
 class PriceDistribution(BaseModel):
     """Price distribution data."""
     node_id: int
     node_code: str
     prices: List[float]  # Sorted from highest to lowest
+
+
+class AllNodesPriceDistribution(BaseModel):
+    """Price distribution across all nodes for a specific timestamp."""
+    timestamp: datetime
+    data: List[NodePricePoint]  # Sorted from highest to lowest
 
 
 class CongestionData(BaseModel):

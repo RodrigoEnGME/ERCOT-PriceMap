@@ -2,31 +2,42 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { priceService } from '../../services/priceService';
-import { PriceDistribution, DataType } from '../../types';
+import { DataType } from '../../types';
 
 interface Props {
-  nodeId: number;
-  startDate: string;
-  endDate: string;
+  timestamp: string;
+  market: string;
   dataType: DataType;
 }
 
-const PriceDistributionChart: React.FC<Props> = ({ nodeId, startDate, endDate, dataType }) => {
-  const [data, setData] = useState<PriceDistribution | null>(null);
+interface NodePricePoint {
+  node_id: number;
+  node_code: string;
+  node_name: string;
+  price: number;
+}
+
+interface AllNodesDistribution {
+  timestamp: string;
+  data: NodePricePoint[];
+}
+
+const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }) => {
+  const [data, setData] = useState<AllNodesDistribution | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (nodeId) {
+    if (timestamp) {
       loadData();
     }
-  }, [nodeId, startDate, endDate, dataType]);
+  }, [timestamp, market, dataType]);
 
   const loadData = async () => {
     setLoading(true);
     setError('');
     try {
-      const distribution = await priceService.getPriceDistribution(nodeId, startDate, endDate, dataType);
+      const distribution = await priceService.getAllNodesDistribution(timestamp, market, dataType);
       setData(distribution);
     } catch (err: any) {
       setError('Failed to load price distribution');
@@ -52,52 +63,58 @@ const PriceDistributionChart: React.FC<Props> = ({ nodeId, startDate, endDate, d
     );
   }
 
-  if (!data || data.prices.length === 0) {
+  if (!data || data.data.length === 0) {
     return (
       <Box p={2}>
-        <Typography>No data available</Typography>
+        <Typography>No hay datos disponibles para este momento</Typography>
       </Box>
     );
   }
 
-  // Group prices into buckets for better visualization
-  const bucketSize = 50;
-  const chartData = data.prices
-    .slice(0, Math.min(data.prices.length, 200))  // Limit to 200 data points
-    .map((price, index) => ({
-      index: Math.floor(index / bucketSize) * bucketSize,
-      price: price,
-    }));
+  // Preparar datos para el gráfico (ordenados de mayor a menor)
+  const chartData = data.data.map((item, index) => ({
+    rank: index + 1,
+    price: item.price,
+    node_code: item.node_code,
+    node_name: item.node_name,
+  }));
 
   const getLabel = () => {
     switch (dataType) {
       case DataType.PRICE:
-        return 'Price ($/MWh)';
+        return 'Precio ($/MWh)';
       case DataType.SOLAR_CAPTURE:
-        return 'Solar Capture (MW)';
+        return 'Captura Solar (MW)';
       case DataType.WIND_CAPTURE:
-        return 'Wind Capture (MW)';
+        return 'Captura Eólica (MW)';
     }
   };
 
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
-        Price Distribution - {data.node_code}
+        Distribución de Precios por Nodo
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        Sorted from highest to lowest
+        {data.data.length} nodos ordenados de mayor a menor precio
       </Typography>
       <ResponsiveContainer width="100%" height={350}>
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
-            dataKey="index" 
-            label={{ value: 'Hour Rank', position: 'insideBottom', offset: -5 }}
-            tick={{ fontSize: 12 }}
+            dataKey="rank" 
+            label={{ value: 'Ranking de Nodos', position: 'insideBottom', offset: -5 }}
+            tick={{ fontSize: 10 }}
           />
           <YAxis label={{ value: getLabel(), angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />
-          <Tooltip />
+          <Tooltip 
+            formatter={(value: any, name: any, props: any) => {
+              return [
+                `${value.toFixed(2)}`,
+                `${props.payload.node_code}: ${props.payload.node_name}`
+              ];
+            }}
+          />
           <Legend />
           <Bar dataKey="price" fill="#82ca9d" name={getLabel()} />
         </BarChart>

@@ -30,6 +30,38 @@ export const priceService = {
     return response.data;
   },
 
+  async getYearlyComparison(
+    nodeId: number,
+    month: number,
+    day: number,
+    hour: number,
+    dataType: DataType = DataType.PRICE
+  ): Promise<any> {
+    const response = await apiClient.get(
+      `/prices/yearly-comparison/${nodeId}`,
+      {
+        params: { month, day, hour, data_type: dataType },
+      }
+    );
+    return response.data;
+  },
+
+  async getMonthlyComparison(
+    nodeId: number,
+    year: number,
+    day: number,
+    hour: number,
+    dataType: DataType = DataType.PRICE
+  ): Promise<any> {
+    const response = await apiClient.get(
+      `/prices/monthly-comparison/${nodeId}`,
+      {
+        params: { year, day, hour, data_type: dataType },
+      }
+    );
+    return response.data;
+  },
+
   async getPriceDistribution(
     nodeId: number,
     startDate: string,
@@ -40,6 +72,20 @@ export const priceService = {
       `/prices/distribution/${nodeId}`,
       {
         params: { start_date: startDate, end_date: endDate, data_type: dataType },
+      }
+    );
+    return response.data;
+  },
+
+  async getAllNodesDistribution(
+    timestamp: string,
+    market: string = 'ERCOT',
+    dataType: DataType = DataType.PRICE
+  ): Promise<any> {
+    const response = await apiClient.get(
+      '/prices/all-nodes-distribution',
+      {
+        params: { timestamp, market, data_type: dataType },
       }
     );
     return response.data;
@@ -83,6 +129,19 @@ export const priceService = {
   ): Promise<HourlySnapshot[]> {
     const response = await apiClient.get<HourlySnapshot[]>(
       '/prices/hourly-snapshot',
+      {
+        params: { timestamp, market },
+      }
+    );
+    return response.data;
+  },
+
+  async getVoronoiMap(
+    timestamp: string,
+    market: string = 'ERCOT'
+  ): Promise<any> {
+    const response = await apiClient.get<any>(
+      '/prices/voronoi-map',
       {
         params: { timestamp, market },
       }
