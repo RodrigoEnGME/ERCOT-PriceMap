@@ -86,8 +86,8 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
           <YAxis label={{ value: 'Price ($/MWh)', angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="node1_price" stroke="#1976d2" name={`${data[0]?.node1_code} Price`} dot={false} />
-          <Line type="monotone" dataKey="node2_price" stroke="#dc004e" name={`${data[0]?.node2_code} Price`} dot={false} />
+          {/* <Line type="monotone" dataKey="node1_price" stroke="#1976d2" name={`${data[0]?.node1_code} Price`} dot={false} />
+          <Line type="monotone" dataKey="node2_price" stroke="#dc004e" name={`${data[0]?.node2_code} Price`} dot={false} /> */}
           <Line type="monotone" dataKey="congestion" stroke="#ff9800" name="Congestion" strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>

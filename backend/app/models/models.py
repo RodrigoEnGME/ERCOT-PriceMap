@@ -17,7 +17,7 @@ class DataType(str, enum.Enum):
     PRICE = "price"
     SOLAR_CAPTURE = "solar_capture"
     WIND_CAPTURE = "wind_capture"
-
+    NEGATIVE_HOURS = "negative_hours"
 
 class User(Base):
     """User model."""
@@ -76,6 +76,7 @@ class PriceRecord(Base):
     price = Column(Float)  # $/MWh
     solar_capture = Column(Float)  # MW
     wind_capture = Column(Float)  # MW
+    negative_hours = Column(Float)  # Indicates if the price was negative
     
     # Market info
     market = Column(String(50), nullable=False)

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Polygon, Tooltip, GeoJSON } from 'react-leaflet';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import { priceService } from '../../services/priceService';
 import 'leaflet/dist/leaflet.css';
 
 interface Props {
   timestamp: string;
   market: string;
+  dataType?: string;
 }
 
 interface VoronoiFeature {
@@ -32,14 +33,14 @@ interface VoronoiData {
   features: VoronoiFeature[];
 }
 
-const PriceHeatmap: React.FC<Props> = ({ timestamp, market }) => {
+const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
   const [voronoiData, setVoronoiData] = useState<VoronoiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadData();
-  }, [timestamp, market]);
+  }, [timestamp, market, dataType]);
 
   const loadData = async () => {
     setLoading(true);
@@ -62,37 +63,33 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market }) => {
   };
 
   const getPriceColor = (price: number | null): string => {
-    if (price === null) return '#ffffff'; // Blanco para datos faltantes
+    if (price === null) return '#ffffff';
     
-    // Escala negativa (azules)
-    if (price < -20) return '#00008B'; // Azul muy oscuro
-    if (price < -10) return '#0000CD'; // Azul medio
-    if (price < 0) return '#4169E1'; // Azul claro
+    if (price < -20) return '#00008B';
+    if (price < -10) return '#0000CD';
+    if (price < 0) return '#4169E1';
     
-    // Escala positiva siguiendo la imagen
-    if (price < 10) return '#006400'; // Verde oscuro
-    if (price < 20) return '#32CD32'; // Verde claro
-    if (price < 30) return '#FFFF99'; // Amarillo claro
-    if (price < 40) return '#FFFF00'; // Amarillo
-    if (price < 50) return '#FFD700'; // Amarillo-naranja
-    if (price < 60) return '#FFA500'; // Naranja claro
-    if (price < 70) return '#FF8C00'; // Naranja
-    if (price < 80) return '#FF6347'; // Naranja-rojo
-    if (price < 90) return '#FF0000'; // Rojo
-    return '#8B0000'; // Rojo oscuro (>90)
+    if (price < 10) return '#006400';
+    if (price < 20) return '#32CD32';
+    if (price < 30) return '#FFFF99';
+    if (price < 40) return '#FFFF00';
+    if (price < 50) return '#FFD700';
+    if (price < 60) return '#FFA500';
+    if (price < 70) return '#FF8C00';
+    if (price < 80) return '#FF6347';
+    if (price < 90) return '#FF0000';
+    return '#8B0000';
   };
 
-  // Función para obtener estilo de cada polígono basado en su precio
   const getPolygonStyle = (feature: VoronoiFeature) => {
     return {
       fillColor: getPriceColor(feature.properties.price),
-      fillOpacity: 0.6,
-      color: '#333',
-      weight: 1,
+      fillOpacity: 0.7,
+      color: '#666',
+      weight: 0.5,
     };
   };
 
-  // Función para manejar cada feature del GeoJSON
   const onEachFeature = (feature: any, layer: any) => {
     if (feature.properties) {
       const { name, code, price } = feature.properties;
@@ -110,7 +107,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market }) => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height={500}>
+      <Box display="flex" justifyContent="center" alignItems="center" height={450}>
         <CircularProgress />
       </Box>
     );
@@ -121,13 +118,13 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market }) => {
       <Box p={2}>
         <Typography color="error" gutterBottom>{error}</Typography>
         <Typography variant="body2" color="text.secondary">
-          Tip: Make sure to run `python populate_db.py` to populate the database with sample data.
+          Tip: Make sure database is populated with price data.
         </Typography>
       </Box>
     );
   }
 
-  if (!voronoiData || voronoiData.features.length === 0 && !loading) {
+  if (!voronoiData || voronoiData.features.length === 0) {
     return (
       <Box p={2}>
         <Typography color="warning.main" gutterBottom>
@@ -140,81 +137,114 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market }) => {
     );
   }
 
-  // Texas center coordinates
+  // Texas bounds
+  const texasBounds: [[number, number], [number, number]] = [
+    [22.8, -108.65], // Southwest corner
+    [39.5, -90.5]    // Northeast corner
+  ];
+
   const center: [number, number] = [31.0, -100.0];
 
+  const legendItems = [
+    { color: '#00008B', label: '< -20' },
+    { color: '#0000CD', label: '-20 to -10' },
+    { color: '#4169E1', label: '-10 to 0' },
+    { color: '#006400', label: '0 to 10' },
+    { color: '#32CD32', label: '10 to 20' },
+    { color: '#FFFF99', label: '20 to 30' },
+    { color: '#FFFF00', label: '30 to 40' },
+    { color: '#FFD700', label: '40 to 50' },
+    { color: '#FFA500', label: '50 to 60' },
+    { color: '#FF8C00', label: '60 to 70' },
+    { color: '#FF6347', label: '70 to 80' },
+    { color: '#FF0000', label: '80 to 90' },
+    { color: '#8B0000', label: '> 90' },
+  ];
+
   return (
-    <Box sx={{ height: '450px', width: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      <MapContainer
-        center={center}
-        zoom={6}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={true}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          opacity={2}
-        />
-        {voronoiData && (
-          <GeoJSON
-            data={voronoiData as any}
-            style={getPolygonStyle as any}
-            onEachFeature={onEachFeature}
+    <Box sx={{ height: '450px', width: '100%', display: 'flex', gap: 2, position: 'relative' }}>
+      {/* Map Container */}
+      <Box sx={{ flex: 1, position: 'relative' }}>
+        <MapContainer
+          center={center}
+          zoom={5}
+          maxBounds={texasBounds}
+          maxBoundsViscosity={1.0}
+          minZoom={5}
+          maxZoom={9}
+          style={{ height: '100%', width: '100%' }}
+          scrollWheelZoom={true}
+          zoomControl={true}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+            opacity={1}
           />
-        )}
-      </MapContainer>
-      
-      {/* Marca de Agua GME */}
-      {/* <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          fontSize: '120px',
-          fontWeight: 'bold',
-          color: 'rgba(255, 255, 255, 0.15)',
-          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
-          pointerEvents: 'none',
-          userSelect: 'none',
-          zIndex: 400,
-          letterSpacing: '20px',
+          {voronoiData && (
+            <GeoJSON
+              data={voronoiData as any}
+              style={getPolygonStyle as any}
+              onEachFeature={onEachFeature}
+            />
+          )}
+        </MapContainer>
+      </Box>
+
+      {/* Legend - Right Side */}
+      <Paper 
+        elevation={2}
+        sx={{ 
+          width: 180, 
+          p: 1.5,
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
         }}
       >
-        GME
-      </Box> */}
-      
-      {/* Legend */}
-      <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-        {[
-          { color: '#00008B', label: '< -$20' },
-          { color: '#0000CD', label: '-$20 to -$10' },
-          { color: '#4169E1', label: '-$10 to $0' },
-          { color: '#006400', label: '$0 to $10' },
-          { color: '#32CD32', label: '$10 to $20' },
-          { color: '#FFFF99', label: '$20 to $30' },
-          { color: '#FFFF00', label: '$30 to $40' },
-          { color: '#FFD700', label: '$40 to $50' },
-          { color: '#FFA500', label: '$50 to $60' },
-          { color: '#FF8C00', label: '$60 to $70' },
-          { color: '#FF6347', label: '$70 to $80' },
-          { color: '#FF0000', label: '$80 to $90' },
-          { color: '#8B0000', label: '> $90' },
-        ].map((item) => (
-          <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box
-              sx={{
-                width: 16,
-                height: 16,
-                backgroundColor: item.color,
-                border: '1px solid #666',
+        <Typography 
+          variant="subtitle2" 
+          sx={{ 
+            fontWeight: 'bold', 
+            mb: 1.5,
+            textAlign: 'center',
+            fontSize: '0.9rem',
+            borderBottom: '2px solid #333',
+            pb: 0.5
+          }}
+        >
+          {dataType==='price' ? 'Price ($/MWh)' : dataType==='solar_capture' ? 'Solar Capture (MW)' : dataType==='wind_capture' ? 'Wind Capture (MW)' : 'Price ($/MWh)'}
+        </Typography>
+        
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          {legendItems.map((item) => (
+            <Box 
+              key={item.label} 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1,
               }}
-            />
-            <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>{item.label}</Typography>
-          </Box>
-        ))}
-      </Box>
+            >
+              <Box
+                sx={{
+                  width: 24,
+                  height: 18,
+                  backgroundColor: item.color,
+                  border: '1px solid #333',
+                  flexShrink: 0,
+                }}
+              />
+              <Typography 
+                variant="caption" 
+                sx={{ fontSize: '0.75rem', color: '#333' }}
+              >
+                {item.label}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      </Paper>
     </Box>
   );
 };

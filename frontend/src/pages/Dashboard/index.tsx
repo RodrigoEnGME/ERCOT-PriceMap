@@ -161,7 +161,7 @@ const Dashboard: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             Nodal Price Heatmap
           </Typography>
-          <PriceHeatmap timestamp={getHeatmapTimestamp()} market={market} />
+          <PriceHeatmap timestamp={getHeatmapTimestamp()} market={market} dataType={dataType} />
         </Paper>
 
         {/* Area Status Indicator */}
@@ -227,7 +227,7 @@ const Dashboard: React.FC = () => {
           <Grid container spacing={3}>
           {selectedNode1 && selectedYear && selectedDay !== undefined && selectedHour !== undefined && (
             <>
-              <Grid size={{ xs: 12, lg: 6 }}>
+              <Grid size={{ xs: 12 }}>
                 <PriceEvolutionChart
                   nodeId={selectedNode1}
                   year={selectedYear}
@@ -236,26 +236,26 @@ const Dashboard: React.FC = () => {
                   dataType={dataType}
                 />
               </Grid>
-              <Grid size={{ xs: 12, lg: 6 }}>
+              <Grid size={{ xs: 12 }}>
                 <PriceDistributionChart
                   timestamp={getHeatmapTimestamp()}
                   market={market}
                   dataType={dataType}
                 />
               </Grid>
+              {selectedNode1 && selectedNode2 && (
+                <Grid size={{ xs: 12 }}>
+                  <CongestionChart
+                    node1Id={selectedNode1}
+                    node2Id={selectedNode2}
+                    startDate={dateRange.start}
+                    endDate={dateRange.end}
+                  />
+                </Grid>
+              )}
             </>
           )}
 
-          {/* {selectedNode1 && selectedNode2 && (
-            <Grid size={{ xs: 12 }}>
-              <CongestionChart
-                node1Id={selectedNode1}
-                node2Id={selectedNode2}
-                startDate={dateRange.start}
-                endDate={dateRange.end}
-              />
-            </Grid>
-          )} */}
         </Grid>
         </Box>
         {/* Fin del contenedor con padding */}

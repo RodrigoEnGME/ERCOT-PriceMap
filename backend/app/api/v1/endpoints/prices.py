@@ -368,8 +368,8 @@ def get_congestion_pricing(
         .filter(
             and_(
                 PriceRecord.node_id == node1_id,
-                PriceRecord.timestamp >= start_date,
-                PriceRecord.timestamp <= end_date
+                # PriceRecord.timestamp >= start_date,
+                # PriceRecord.timestamp <= end_date
             )
         )
         .all()
@@ -380,8 +380,8 @@ def get_congestion_pricing(
         .filter(
             and_(
                 PriceRecord.node_id == node2_id,
-                PriceRecord.timestamp >= start_date,
-                PriceRecord.timestamp <= end_date
+                # PriceRecord.timestamp >= start_date,
+                # PriceRecord.timestamp <= end_date
             )
         )
         .all()

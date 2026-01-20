@@ -8,3 +8,4 @@ backend/__pycache__/
 backend/venv/
 backend/.env
 backend/app/__pycache__/
+backend/test_voronoi.py

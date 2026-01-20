@@ -55,6 +55,7 @@ export enum DataType {
   PRICE = 'price',
   SOLAR_CAPTURE = 'solar_capture',
   WIND_CAPTURE = 'wind_capture',
+  NEGATIVE_HOURS = 'negative_hours',
 }
 
 export enum AggregationType {

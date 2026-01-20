@@ -16,6 +16,7 @@ class DataType(str, Enum):
     PRICE = "price"
     SOLAR_CAPTURE = "solar_capture"
     WIND_CAPTURE = "wind_capture"
+    NEGATIVE_HOURS = "negative_hours"
 
 
 class AggregationType(str, Enum):
@@ -126,6 +127,7 @@ class PriceRecordBase(BaseModel):
     price: Optional[float] = None
     solar_capture: Optional[float] = None
     wind_capture: Optional[float] = None
+    negative_hours: Optional[float] = None
     market: str
 
 

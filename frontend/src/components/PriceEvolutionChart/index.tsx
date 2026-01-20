@@ -91,6 +91,8 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
         return 'Captura Solar (MW)';
       case DataType.WIND_CAPTURE:
         return 'Captura Eólica (MW)';
+      case DataType.NEGATIVE_HOURS:
+        return 'Horas Negativas';
     }
   };
 
@@ -100,7 +102,7 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
         {data.node_name} - Comparación Mensual {year}
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        {getLabel()} para día {day} a las {hour}:00 hrs de cada mes
+        {getLabel()} promedio de cada mes
       </Typography>
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={chartData}>
