@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const START_URL = import.meta.env.VITE_START_URL || '';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -32,7 +33,7 @@ class ApiClient {
         if (error.response?.status === 401) {
           // Token expired or invalid
           localStorage.removeItem('access_token');
-          window.location.href = '/login';
+          window.location.href = `${START_URL}/login`;
         }
         return Promise.reject(error);
       }

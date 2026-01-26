@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Paper, CircularProgress } from '@mui/material';
 import { priceService } from '../../services/priceService';
+import { DataType } from '../../types';
 
 interface Props {
   timestamp: string;
@@ -28,7 +29,8 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market }) => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const voronoiData = await priceService.getVoronoiMap(timestamp, market);
+      // Si tiene prop dataType, pasarla; sino usar PRICE por defecto
+      const voronoiData = await priceService.getVoronoiMap(timestamp, market, DataType.PRICE);
       setData(voronoiData);
     } catch (err) {
       console.error('Failed to load area status', err);
@@ -116,43 +118,51 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market }) => {
   );
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
-        LMPs [USD/MWh]
-      </Typography>
-      
-      <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-        {/* Hubs Column */}
-        <Box sx={{ minWidth: 180 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-            Hubs
-          </Typography>
-          {hubs.map((node: NodeStatus) => (
-            <StatusCircle key={node.node_id} node={node} />
-          ))}
-        </Box>
+    <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+      {/* Contenedor LMPs */}
+      <Paper sx={{ p: 2, flex: 1 }}>
+        <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
+          LMPs [USD/MWh]
+        </Typography>
+        
+        <Box sx={{ display: 'flex', gap: 3, justifyContent: 'space-evenly' }}>
+          {/* Hubs Column */}
+          <Box sx={{ minWidth: 180 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Hubs
+            </Typography>
+            {hubs.map((node: NodeStatus) => (
+              <StatusCircle key={node.node_id} node={node} />
+            ))}
+          </Box>
 
-        {/* Load Zones Column */}
-        <Box sx={{ minWidth: 180 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-            Load Zones
-          </Typography>
-          {loadZones.map((node: NodeStatus) => (
-            <StatusCircle key={node.node_id} node={node} />
-          ))}
+          {/* Load Zones Column */}
+          <Box sx={{ minWidth: 180 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Load Zones
+            </Typography>
+            {loadZones.map((node: NodeStatus) => (
+              <StatusCircle key={node.node_id} node={node} />
+            ))}
+          </Box>
         </Box>
+      </Paper>
 
-        {/* Reserves Column */}
-        <Box sx={{ minWidth: 180 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-            Reserves [USD/kW]
-          </Typography>
-          {reserves.map((node: NodeStatus) => (
-            <StatusCircle key={node.node_id} node={node} />
-          ))}
+      {/* Contenedor Reserves - Separado */}
+      <Paper sx={{ p: 2, flex: 1 }}>
+        <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
+          Reserves [USD/kW]
+        </Typography>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'space-evenly' }}>
+          <Box sx={{ minWidth: 180 }}>
+            {reserves.map((node: NodeStatus) => (
+              <StatusCircle key={node.node_id} node={node} />
+            ))}
+          </Box>
         </Box>
-      </Box>
-    </Paper>
+      </Paper>
+    </Box>
   );
 };
 

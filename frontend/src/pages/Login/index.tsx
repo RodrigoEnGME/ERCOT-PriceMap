@@ -13,6 +13,8 @@ import {
 import { useAuthStore } from '../../store';
 import { authService } from '../../services/authService';
 
+const START_URL = import.meta.env.VITE_START_URL || '';
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -33,7 +35,7 @@ const Login: React.FC = () => {
       
       // Pequeño delay para asegurar que el store se actualice
       setTimeout(() => {
-        navigate('/dashboard', { replace: true });
+        navigate(`${START_URL}/dashboard`, { replace: true });
       }, 100);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed. Please try again.');

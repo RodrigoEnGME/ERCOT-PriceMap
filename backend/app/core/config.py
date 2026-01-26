@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://localhost:3000",
+        "http://crm.grupome.com",
+        "https://crm.grupome.com",
     ]
     
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")

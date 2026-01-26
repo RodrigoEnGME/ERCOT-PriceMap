@@ -10,9 +10,6 @@ import {
   Divider,
   Button,
 } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useFilterStore } from '../../store';
 import { nodeService } from '../../services/nodeService';
 import { priceService } from '../../services/priceService';
@@ -26,11 +23,27 @@ interface Props {
   onExport?: () => void;
 }
 
+const MONTHS = [
+  { value: 1, label: 'January' },
+  { value: 2, label: 'February' },
+  { value: 3, label: 'March' },
+  { value: 4, label: 'April' },
+  { value: 5, label: 'May' },
+  { value: 6, label: 'June' },
+  { value: 7, label: 'July' },
+  { value: 8, label: 'August' },
+  { value: 9, label: 'September' },
+  { value: 10, label: 'October' },
+  { value: 11, label: 'November' },
+  { value: 12, label: 'December' },
+];
+
 const FilterPanel: React.FC<Props> = ({ onExport }) => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [markets, setMarkets] = useState<string[]>([]);
-  
+  const [isInitialized, setIsInitialized] = useState(false); 
+
   const {
     selectedYear,
     selectedMonth,
@@ -56,35 +69,49 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
   } = useFilterStore();
 
   useEffect(() => {
-    loadNodes();
-    loadAvailableYears();
-    initializeDefaultValues();
+    initializeFilters();
   }, []);
 
-  const initializeDefaultValues = () => {
-    // Setear fecha por defecto: 2025-12-01T09:00
-    const defaultDate = new Date('2025-12-01T09:00:00');
-    setDate(defaultDate);
-    setYear(defaultDate.getFullYear());
-    setMonth(defaultDate.getMonth() + 1);
-    setDay(defaultDate.getDate());
-    setHour(defaultDate.getHours());
+  const initializeFilters = async () => {
+    try {
+      // 1. Primero cargar años y mercados
+      await loadAvailableYears();
+      
+      // 2. Setear valores por defecto de fechas
+      const defaultYear = 2025;
+      const defaultMonth = 12;
+      
+      setYear(defaultYear);
+      setMonth(defaultMonth);
+      setDay(1);
+      setHour(0);
+      
+      const defaultDate = new Date(defaultYear, defaultMonth - 1, 1, 0, 0, 0);
+      setDate(defaultDate);
+      
+      // 3. Luego cargar nodos
+      await loadNodes();
+      
+      // 4. Marcar como inicializado
+      setIsInitialized(true);
+      
+    } catch (err) {
+      console.error('Failed to initialize filters', err);
+    }
   };
 
   const loadNodes = async () => {
     try {
-      const nodeList = await nodeService.getNodes({ limit: 1000 });
+      const nodeList = await nodeService.getNodes();
       console.log('Loaded nodes:', nodeList.length, 'nodes');
       setNodes(nodeList);
       
       // Setear nodos por defecto si hay al menos 2 nodos
-      if (nodeList.length >= 2) {
+      if (nodeList.length >= 19) {
         setNode1(nodeList[18].id);
+      }
+      if (nodeList.length >= 21) {
         setNode2(nodeList[20].id);
-        console.log('Default nodes set:', nodeList[18].code, nodeList[20].code);
-      } else if (nodeList.length === 1) {
-        setNode1(nodeList[18].id);
-        console.log('Default node 1 set:', nodeList[18].code);
       }
       
       if (nodeList.length === 0) {
@@ -100,9 +127,35 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
       const data = await priceService.getAvailableYears();
       setAvailableYears(data.years);
       setMarkets(data.markets);
+      
+      // Si no hay mercado seleccionado, usar el primero disponible
+      if (data.markets.length > 0 && !market) {
+        setMarket(data.markets[0]);
+      }
     } catch (err) {
       console.error('Failed to load available years', err);
     }
+  };
+
+  // Actualizar fecha cuando cambia año o mes
+  const handleYearChange = (year: number) => {
+    setYear(year);
+    setDay(1);
+    setHour(0);
+    
+    // Actualizar selectedDate con día 1, hora 0
+    const newDate = new Date(year, (selectedMonth || 1) - 1, 1, 0, 0, 0);
+    setDate(newDate);
+  };
+
+  const handleMonthChange = (month: number) => {
+    setMonth(month);
+    setDay(1);
+    setHour(0);
+    
+    // Actualizar selectedDate con día 1, hora 0
+    const newDate = new Date(selectedYear || new Date().getFullYear(), month - 1, 1, 0, 0, 0);
+    setDate(newDate);
   };
 
   const handleExport = async () => {
@@ -154,43 +207,33 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
       </Typography>
       <Divider sx={{ mb: 2 }} />
 
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        {/* Date/Time Picker - Solo horas completas */}
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <DateTimePicker
-            label="Select Date & Hour"
-            value={selectedDate || new Date()}
-            onChange={(newValue) => {
-              if (newValue) {
-                // Truncar a hora completa (sin minutos/segundos)
-                const hourOnly = new Date(newValue);
-                hourOnly.setMinutes(0, 0, 0);
-                setDate(hourOnly);
-                setYear(hourOnly.getFullYear());
-                setMonth(hourOnly.getMonth() + 1);
-                setDay(hourOnly.getDate());
-                setHour(hourOnly.getHours());
-              }
-            }}
-            views={['year', 'month', 'day', 'hours']}
-            format="yyyy-MM-dd HH:00"
-            ampm={false}
-            slotProps={{ textField: { size: 'small' } }}
-          />
-        </FormControl>
-      </LocalizationProvider>
-
       {/* Year */}
       <FormControl fullWidth size="small" sx={{ mb: 2 }}>
         <InputLabel>Year</InputLabel>
         <Select
           value={selectedYear || ''}
           label="Year"
-          onChange={(e) => setYear(e.target.value as number)}
+          onChange={(e) => handleYearChange(e.target.value as number)}
         >
           {availableYears.map((year) => (
             <MenuItem key={year} value={year}>
               {year}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      {/* Month */}
+      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+        <InputLabel>Month</InputLabel>
+        <Select
+          value={selectedMonth || ''}
+          label="Month"
+          onChange={(e) => handleMonthChange(e.target.value as number)}
+        >
+          {MONTHS.map((month) => (
+            <MenuItem key={month.value} value={month.value}>
+              {month.label}
             </MenuItem>
           ))}
         </Select>
@@ -214,10 +257,10 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
 
       {/* Node 1 */}
       <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-        <InputLabel>Node 1</InputLabel>
+        <InputLabel>Grid Cell 1</InputLabel>
         <Select
           value={selectedNode1 || ''}
-          label="Node 1"
+          label="Grid Cell 1"
           onChange={(e) => setNode1(e.target.value as number)}
         >
           <MenuItem value="">
@@ -225,7 +268,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           </MenuItem>
           {nodes.map((node) => (
             <MenuItem key={node.id} value={node.id}>
-              {node.code} - {node.name}
+              {node.name}
             </MenuItem>
           ))}
         </Select>
@@ -233,10 +276,10 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
 
       {/* Node 2 */}
       <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-        <InputLabel>Node 2</InputLabel>
+        <InputLabel>Grid Cell 2</InputLabel>
         <Select
           value={selectedNode2 || ''}
-          label="Node 2"
+          label="Grid Cell 2"
           onChange={(e) => setNode2(e.target.value as number)}
         >
           <MenuItem value="">
@@ -244,7 +287,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           </MenuItem>
           {nodes.map((node) => (
             <MenuItem key={node.id} value={node.id}>
-              {node.code} - {node.name}
+              {node.name}
             </MenuItem>
           ))}
         </Select>
@@ -261,11 +304,13 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           <MenuItem value={DataType.PRICE}>Price</MenuItem>
           <MenuItem value={DataType.SOLAR_CAPTURE}>Solar Capture</MenuItem>
           <MenuItem value={DataType.WIND_CAPTURE}>Wind Capture</MenuItem>
+          <MenuItem value={DataType.NEGATIVE_HOURS}>Negative Hours</MenuItem>
+          <MenuItem value={DataType.NODES}>Nodes</MenuItem>
         </Select>
       </FormControl>
 
       {/* Aggregation Type */}
-      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+      {/* <FormControl fullWidth size="small" sx={{ mb: 2 }}>
         <InputLabel>Aggregation</InputLabel>
         <Select
           value={aggregationType}
@@ -277,7 +322,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           <MenuItem value={AggregationType.MIN}>Minimum</MenuItem>
           <MenuItem value={AggregationType.SUM}>Sum</MenuItem>
         </Select>
-      </FormControl>
+      </FormControl> */}
 
       <Divider sx={{ my: 2 }} />
 

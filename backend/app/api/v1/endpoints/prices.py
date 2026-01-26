@@ -511,16 +511,19 @@ def get_hourly_snapshot(
 def get_voronoi_map(
     timestamp: datetime,
     market: str = "ERCOT",
+    datatype: DataType = DataType.PRICE,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
-    Get Voronoi polygons for all nodes with their prices at a specific hour.
+    Get Voronoi polygons for all nodes with their data at a specific hour.
     Returns GeoJSON FeatureCollection with polygon geometries.
     """
     try:
         # Obtener todos los nodos activos de la base de datos
-        nodes = db.query(Node).filter(Node.is_active == True).all()
+        nodes = db.query(Node).filter(Node.is_active == True).filter(Node.zone == 'Central').all()
+        print(f"DEBUG: Selected {len(nodes)} nodes")
+        # nodes = nodes.filter(Node.zone ==)
         
         if not nodes:
             raise HTTPException(
@@ -549,39 +552,60 @@ def get_voronoi_map(
         geojson = generate_voronoi_polygons(nodes_dict, texas_boundary)
         print(f"DEBUG: Generated {len(geojson.get('features', []))} polygons")
         
-        # Obtener precios para la hora especificada
+        # Si el datatype es NODES, solo devolver información de nodos (sin precios)
+        if datatype == DataType.NODES:
+            print("DEBUG: Datatype is NODES, returning without price data")
+            for feature in geojson['features']:
+                feature['properties']['value'] = None  # No hay valor asociado
+            return geojson
+        
+        # Para otros datatypes, consultar la tabla de precios
         hour_start = timestamp.replace(minute=0, second=0, microsecond=0)
         hour_end = hour_start + timedelta(hours=1)
         
-        print(f"DEBUG: Querying prices from {hour_start} to {hour_end}")
+        print(f"DEBUG: Querying {datatype} data from {hour_start} to {hour_end}")
         
-        # Consultar precios promedio por nodo
-        price_records = (
+        # Seleccionar el campo de datos según el tipo
+        field_map = {
+            DataType.PRICE: PriceRecord.price,
+            DataType.SOLAR_CAPTURE: PriceRecord.solar_capture,
+            DataType.WIND_CAPTURE: PriceRecord.wind_capture,
+            DataType.NEGATIVE_HOURS: PriceRecord.negative_hours
+        }
+        data_field = field_map[datatype]
+        
+        # Consultar datos promedio por nodo
+        data_records = (
             db.query(
                 Node.code,
-                func.avg(PriceRecord.price).label('avg_price')
+                func.avg(data_field).label('avg_value')
             )
             .join(PriceRecord, PriceRecord.node_id == Node.id)
             .filter(
                 and_(
                     PriceRecord.timestamp >= hour_start,
                     PriceRecord.timestamp < hour_end,
-                    PriceRecord.market == market
+                    PriceRecord.market == market,
+                    data_field.isnot(None)
                 )
             )
             .group_by(Node.code)
             .all()
         )
         
-        print(f"DEBUG: Found prices for {len(price_records)} nodes")
+        print(f"DEBUG: Found data for {len(data_records)} nodes")
         
-        # Crear diccionario de precios por código de nodo
-        prices_by_code = {code: float(price) for code, price in price_records}
+        # Crear diccionario de valores por código de nodo
+        values_by_code = {code: float(value) for code, value in data_records}
         
-        # Agregar precios a las propiedades de cada feature
+        # Agregar valores a las propiedades de cada feature
         for feature in geojson['features']:
             node_code = feature['properties']['code']
-            feature['properties']['price'] = prices_by_code.get(node_code, None)
+            feature['properties']['value'] = values_by_code.get(node_code, None)
+            
+            # Mantener compatibilidad con frontend que espera 'price'
+            if datatype == DataType.PRICE:
+                feature['properties']['price'] = values_by_code.get(node_code, None)
         
         return geojson
     

@@ -28,7 +28,7 @@ const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (timestamp) {
+    if (timestamp && dataType !== DataType.NODES) {
       loadData();
     }
   }, [timestamp, market, dataType]);
@@ -82,28 +82,28 @@ const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }
   const getLabel = () => {
     switch (dataType) {
       case DataType.PRICE:
-        return 'Precio ($/MWh)';
+        return 'Price ($/MWh)';
       case DataType.SOLAR_CAPTURE:
-        return 'Captura Solar (MW)';
+        return 'Solar Capture (MW)';
       case DataType.WIND_CAPTURE:
-        return 'Captura Eólica (MW)';
+        return 'Wind Capture (MW)';
     }
   };
 
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
-        Distribución de Precios por Nodo
+        Grid Cell Price Distribution
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        {data.data.length} nodos ordenados de mayor a menor precio
+        {data.data.length} nodes ordered from highest to lowest price
       </Typography>
       <ResponsiveContainer width="100%" height={350}>
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="rank" 
-            label={{ value: 'Ranking de Nodos', position: 'insideBottom', offset: -5 }}
+            label={{ value: 'Node Ranking', position: 'insideBottom', offset: -5 }}
             tick={{ fontSize: 10 }}
           />
           <YAxis label={{ value: getLabel(), angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />

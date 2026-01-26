@@ -62,7 +62,8 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
   }
 
   const chartData = data.map((item) => ({
-    timestamp: format(parseISO(item.timestamp), 'MM/dd HH:mm'),
+    timestamp: format(parseISO(item.timestamp), 'MMM yyyy'),
+    fullTimestamp: format(parseISO(item.timestamp), 'MMM dd, yyyy HH:mm'),
     node1_price: item.node1_price,
     node2_price: item.node2_price,
     congestion: item.congestion_price,
@@ -84,11 +85,19 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
             height={80}
           />
           <YAxis label={{ value: 'Price ($/MWh)', angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />
-          <Tooltip />
+          <Tooltip 
+            labelFormatter={(value: any) => {
+              const item = chartData.find(d => d.timestamp === value);
+              return item?.fullTimestamp || value;
+            }}
+            formatter={(value:any)=>{
+              return typeof value === 'number' ? value.toFixed(2) : value;
+            }}
+          />
           <Legend />
           {/* <Line type="monotone" dataKey="node1_price" stroke="#1976d2" name={`${data[0]?.node1_code} Price`} dot={false} />
           <Line type="monotone" dataKey="node2_price" stroke="#dc004e" name={`${data[0]?.node2_code} Price`} dot={false} /> */}
-          <Line type="monotone" dataKey="congestion" stroke="#ff9800" name="Congestion" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="congestion" stroke="#dc004e" name="Congestion" strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>
     </Paper>

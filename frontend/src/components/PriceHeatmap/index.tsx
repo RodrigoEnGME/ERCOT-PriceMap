@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import React, { useEffect, useState, useRef } from 'react';
+import { MapContainer, TileLayer, GeoJSON, Marker, useMap } from 'react-leaflet';
 import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import { priceService } from '../../services/priceService';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { DataType } from '../../types';
 
 interface Props {
   timestamp: string;
@@ -25,6 +27,7 @@ interface VoronoiFeature {
     market: string;
     zone: string;
     price: number | null;
+    value?: number | null;
   };
 }
 
@@ -32,11 +35,47 @@ interface VoronoiData {
   type: 'FeatureCollection';
   features: VoronoiFeature[];
 }
+const MapInvalidator: React.FC = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Pequeño delay para asegurar que el DOM esté completamente renderizado
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [map]);
+  
+  return null;
+};
+const ZoomLogger: React.FC = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    const onZoomEnd = () => {
+      console.log('Current zoom level:', map.getZoom());
+    };
+    
+    // Log inicial
+    console.log('Initial zoom level:', map.getZoom());
+    
+    // Escuchar cambios de zoom
+    map.on('zoomend', onZoomEnd);
+    
+    return () => {
+      map.off('zoomend', onZoomEnd);
+    };
+  }, [map]);
+  
+  return null;
+};
 
 const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
   const [voronoiData, setVoronoiData] = useState<VoronoiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     loadData();
@@ -46,9 +85,9 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
     setLoading(true);
     setError('');
     try {
-      console.log('Requesting Voronoi map data for timestamp:', timestamp, 'market:', market);
-      const data = await priceService.getVoronoiMap(timestamp, market);
-      console.log('Loaded Voronoi data:', data.features?.length, 'polygons');
+      // console.log('Requesting Voronoi map data for timestamp:', timestamp, 'market:', market, 'dataType:', dataType);
+      const data = await priceService.getVoronoiMap(timestamp, market, dataType as DataType);
+      // console.log('Loaded Voronoi data:', data.features?.length, 'polygons');
       if (!data.features || data.features.length === 0) {
         setError('No data available for this timestamp. Make sure database is populated.');
       }
@@ -62,28 +101,36 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
     }
   };
 
-  const getPriceColor = (price: number | null): string => {
-    if (price === null) return '#ffffff';
+  useEffect(() => {
+    if (!loading && voronoiData && mapRef.current) {
+      setTimeout(() => {
+        mapRef.current?.setZoom(5.5); // Cambia el zoom a 6
+      }, 100);
+    }
+  }, [loading, voronoiData]);
+
+
+  const getPriceColor = (value: number | null): string => {
+    if (value === null || value === undefined) return '#ffffff';
     
-    if (price < -20) return '#00008B';
-    if (price < -10) return '#0000CD';
-    if (price < 0) return '#4169E1';
-    
-    if (price < 10) return '#006400';
-    if (price < 20) return '#32CD32';
-    if (price < 30) return '#FFFF99';
-    if (price < 40) return '#FFFF00';
-    if (price < 50) return '#FFD700';
-    if (price < 60) return '#FFA500';
-    if (price < 70) return '#FF8C00';
-    if (price < 80) return '#FF6347';
-    if (price < 90) return '#FF0000';
+    if (value < -20) return '#00008B';
+    if (value < -10) return '#0000CD';
+    if (value <   0) return '#4169E1';
+    if (value <  10) return '#006400';
+    if (value <  20) return '#32CD32';
+    if (value <  30) return '#FFFF99';
+    if (value <  40) return '#FFFF00';
+    if (value <  50) return '#FFD700';
+    if (value <  60) return '#FFA500';
+    if (value <  70) return '#FF8C00';
+    if (value <  80) return '#FF6347';
+    if (value <  90) return '#FF0000';
     return '#8B0000';
   };
 
   const getPolygonStyle = (feature: VoronoiFeature) => {
     return {
-      fillColor: getPriceColor(feature.properties.price),
+      fillColor: getPriceColor(feature.properties.value ?? feature.properties.price),
       fillOpacity: 0.7,
       color: '#666',
       weight: 0.5,
@@ -92,22 +139,91 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
 
   const onEachFeature = (feature: any, layer: any) => {
     if (feature.properties) {
-      const { name, code, price } = feature.properties;
-      const priceText = price !== null ? `$${price.toFixed(2)}/MWh` : 'No data';
+      const { name, code, value, price } = feature.properties;
+      
+      let valueText: string;
+      if (value === null || value === undefined) {
+        valueText = 'No data';
+      } else if (typeof value === 'string') {
+        valueText = `Node: ${value}`;
+      } else if (typeof value === 'number' && (dataType !== DataType.NODES && dataType !== DataType.NEGATIVE_HOURS)) {
+        valueText = `$${value.toFixed(2)}/MWh`;
+      } else if (typeof value === 'number' && (dataType === DataType.NEGATIVE_HOURS)) {
+        valueText = `${value} hours`;
+      } else {
+        valueText = 'No data';
+      }
+      
       layer.bindTooltip(
         `<div>
           <strong>${name}</strong><br/>
           Code: ${code}<br/>
-          Price: ${priceText}
+          Value: ${valueText}
         </div>`,
         { permanent: false, direction: 'top' }
       );
     }
   };
 
+  // Función para calcular el centroide de un polígono
+  const getPolygonCentroid = (coordinates: number[][][]): [number, number] => {
+    const points = coordinates[0]; // Primer anillo del polígono
+    let sumLat = 0;
+    let sumLng = 0;
+    let count = points.length - 1; // Excluir el último punto (es igual al primero)
+
+    for (let i = 0; i < count; i++) {
+      sumLng += points[i][0];
+      sumLat += points[i][1];
+    }
+
+    return [sumLat / count, sumLng / count];
+  };
+
+  // Crear icono de texto personalizado
+  const createPriceIcon = (value: number | string | null): L.DivIcon => {
+    let displayValue: string;
+    let textColor: string;
+    
+    // Manejar diferentes tipos de valores
+    if (value === null || value === undefined) {
+      displayValue = '-';
+      textColor = '#999'; // Gris para sin datos
+    } else if (typeof value === 'string') {
+      // Para NODES (strings como "120")
+      displayValue = value;
+      textColor = '#000';
+    } else if (typeof value === 'number' && !isNaN(value)) {
+      // Para números válidos
+      displayValue = Math.round(value).toString();
+      textColor = value < 50 ? '#000' : '#fff';
+    } else {
+      // Para NaN o valores inválidos
+      displayValue = '-';
+      textColor = '#999';
+    }
+
+    const charWidth = 8;
+    const totalWidth = displayValue.length * charWidth;
+    const anchorX = totalWidth / 2;
+    
+    return L.divIcon({
+      className: 'price-label',
+      html: `<div style="
+        font-size: 12px;
+        font-weight: bold;
+        color: ${textColor};
+        white-space: nowrap;
+        pointer-events: none;
+      ">${displayValue}</div>`,
+      iconSize: [totalWidth, 14],
+      iconAnchor: [anchorX - 1, 7],
+    });
+  };
+
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height={450}>
+      <Box display="flex" justifyContent="center" alignItems="center" height={500}>
         <CircularProgress />
       </Box>
     );
@@ -137,11 +253,11 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
     );
   }
 
-  // Texas bounds
   const texasBounds: [[number, number], [number, number]] = [
-    [22.8, -108.65], // Southwest corner
-    [39.5, -90.5]    // Northeast corner
+    [25.8, -106.65],
+    [36.5, -93.5]
   ];
+  const INITIAL_ZOOM = 5.5;
 
   const center: [number, number] = [31.0, -100.0];
 
@@ -161,21 +277,39 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
     { color: '#8B0000', label: '> 90' },
   ];
 
+  const colorMapTags = {
+  'price': 'LPM ($/MWh)',
+  'solar_capture': 'Solar Capture ($/MW)',
+  'wind_capture': 'Wind Capture ($/MW)',
+  'negative_hours': 'Negative Hours [Hrs]',
+  'nodes': 'Grid Cell',
+
+  }
+
   return (
-    <Box sx={{ height: '450px', width: '100%', display: 'flex', gap: 2, position: 'relative' }}>
-      {/* Map Container */}
+    <Box sx={{ height: '500px', width: '100%', display: 'flex', gap: 2, position: 'relative' }}>
       <Box sx={{ flex: 1, position: 'relative' }}>
         <MapContainer
           center={center}
-          zoom={5}
+          zoom={INITIAL_ZOOM}
           maxBounds={texasBounds}
           maxBoundsViscosity={1.0}
-          minZoom={5}
-          maxZoom={9}
+          minZoom={INITIAL_ZOOM}
+          maxZoom={7}
+          zoomSnap={0.5}
+          zoomDelta={0.5} 
           style={{ height: '100%', width: '100%' }}
-          scrollWheelZoom={true}
+          scrollWheelZoom={false}
           zoomControl={true}
+          whenReady={() => {
+            // Invalidar después de que el mapa esté listo
+            setTimeout(() => {
+              mapRef.current?.invalidateSize();
+            }, 100);
+          }}
         >
+          <MapInvalidator />
+          <ZoomLogger />
           <TileLayer
             attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
@@ -188,14 +322,26 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
               onEachFeature={onEachFeature}
             />
           )}
+          {/* Marcadores de precio en el centro de cada polígono */}
+          {voronoiData && voronoiData.features.map((feature, index) => {
+            const centroid = getPolygonCentroid(feature.geometry.coordinates);
+            // Usar value si existe, sino price
+            const displayValue = feature.properties.value ?? feature.properties.price;
+            return (
+              <Marker
+                key={`price-${index}`}
+                position={centroid}
+                icon={createPriceIcon(displayValue)}
+              />
+            );
+          })}
         </MapContainer>
       </Box>
 
-      {/* Legend - Right Side */}
       <Paper 
         elevation={2}
         sx={{ 
-          width: 180, 
+          width: 120, 
           p: 1.5,
           display: 'flex',
           flexDirection: 'column',
@@ -213,7 +359,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
             pb: 0.5
           }}
         >
-          {dataType==='price' ? 'Price ($/MWh)' : dataType==='solar_capture' ? 'Solar Capture (MW)' : dataType==='wind_capture' ? 'Wind Capture (MW)' : 'Price ($/MWh)'}
+          {colorMapTags[dataType as keyof typeof colorMapTags] || 'Value'}
         </Typography>
         
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>

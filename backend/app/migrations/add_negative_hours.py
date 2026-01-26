@@ -3,17 +3,27 @@ Migración: Agregar columna negative_hours a price_records
 Fecha: 2026-01-20
 """
 import pyodbc
-from app.core.config import settings
+import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
 
 def run_migration():
     """Ejecuta la migración para agregar la columna negative_hours."""
     
+    # Leer configuración desde variables de entorno
+    db_server = os.getenv("DB_SERVER", "localhost\\SQLEXPRESS")
+    db_name = os.getenv("DB_NAME", "ERCOTPricing")
+    db_user = os.getenv("DB_USER", "sa")
+    db_password = os.getenv("DB_PASSWORD", "")
+    
     connection_string = (
         f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-        f"SERVER={settings.DB_SERVER};"
-        f"DATABASE={settings.DB_NAME};"
-        f"UID={settings.DB_USER};"
-        f"PWD={settings.DB_PASSWORD}"
+        f"SERVER={db_server};"
+        f"DATABASE={db_name};"
+        f"UID={db_user};"
+        f"PWD={db_password}"
     )
     
     try:
@@ -34,6 +44,8 @@ def run_migration():
         
         if exists > 0:
             print("La columna 'negative_hours' ya existe. No se requiere migración.")
+            cursor.close()
+            conn.close()
             return
         
         print("Agregando columna 'negative_hours'...")
@@ -46,21 +58,15 @@ def run_migration():
         
         conn.commit()
         print("✓ Columna 'negative_hours' agregada exitosamente.")
-        
-        # Opcional: Actualizar valores existentes
-        print("Actualizando valores existentes (estableciendo en NULL)...")
-        # Si quieres inicializar con algún valor por defecto:
-        # cursor.execute("UPDATE price_records SET negative_hours = 0 WHERE negative_hours IS NULL")
-        # conn.commit()
-        
         print("✓ Migración completada exitosamente.")
         
     except pyodbc.Error as e:
         print(f"✗ Error durante la migración: {e}")
         raise
     finally:
-        if conn:
+        if 'cursor' in locals():
             cursor.close()
+        if 'conn' in locals():
             conn.close()
 
 if __name__ == "__main__":

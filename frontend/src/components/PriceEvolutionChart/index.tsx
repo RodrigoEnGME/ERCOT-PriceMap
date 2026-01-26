@@ -27,7 +27,7 @@ interface MonthlyComparisonData {
   data: MonthlyData[];
 }
 
-const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataType }) => {
   const [data, setData] = useState<MonthlyComparisonData | null>(null);
@@ -35,7 +35,7 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (nodeId && year && day !== undefined && hour !== undefined) {
+    if (nodeId && year && day !== undefined && hour !== undefined && dataType !== DataType.NODES) {
       loadData();
     }
   }, [nodeId, year, day, hour, dataType]);
@@ -46,6 +46,7 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
     try {
       const comparison = await priceService.getMonthlyComparison(nodeId, year, day, hour, dataType);
       setData(comparison);
+      console.log('Monthly Comparison Data:', comparison);
     } catch (err: any) {
       setError('Failed to load monthly comparison');
       console.error(err);
@@ -86,23 +87,23 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
   const getLabel = () => {
     switch (dataType) {
       case DataType.PRICE:
-        return 'Precio ($/MWh)';
+        return 'Price ($/MWh)';
       case DataType.SOLAR_CAPTURE:
-        return 'Captura Solar (MW)';
+        return 'Solar Capture (MW)';
       case DataType.WIND_CAPTURE:
-        return 'Captura Eólica (MW)';
+        return 'Wind Capture (MW)';
       case DataType.NEGATIVE_HOURS:
-        return 'Horas Negativas';
+        return 'Negative Hours';
     }
   };
 
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
-        {data.node_name} - Comparación Mensual {year}
+        {data.node_name} - Monthly Comparison {year}
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        {getLabel()} promedio de cada mes
+        Average {getLabel()} per month
       </Typography>
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={chartData}>

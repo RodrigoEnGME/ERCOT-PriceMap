@@ -7,6 +7,8 @@ import { useAuthStore } from './store';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
+const START_URL = import.meta.env.VITE_START_URL || '';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -25,7 +27,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <>{children}</>;
   }
   
-  return <Navigate to="/login" replace />;
+  return <Navigate to={`${START_URL}/login`} replace />;
 };
 
 function App() {
@@ -35,16 +37,16 @@ function App() {
         <CssBaseline />
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route path={`${START_URL}/login`} element={<Login />} />
             <Route
-              path="/dashboard"
+              path={`${START_URL}/dashboard`}
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               }
             />
-            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route path="/" element={<Navigate to={`${START_URL}/dashboard`} />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

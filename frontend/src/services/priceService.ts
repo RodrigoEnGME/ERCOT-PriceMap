@@ -138,12 +138,13 @@ export const priceService = {
 
   async getVoronoiMap(
     timestamp: string,
-    market: string = 'ERCOT'
+    market: string = 'MDA',
+    dataType: DataType = DataType.PRICE
   ): Promise<any> {
     const response = await apiClient.get<any>(
       '/prices/voronoi-map',
       {
-        params: { timestamp, market },
+        params: { timestamp, market, datatype: dataType },
       }
     );
     return response.data;

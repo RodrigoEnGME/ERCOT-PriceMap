@@ -22,6 +22,8 @@ import { priceService } from '../../services/priceService';
 import { AggregatedStats } from '../../types';
 import AreaStatusIndicator from '../../components/AreaStatusIndicator';
 
+const START_URL = import.meta.env.VITE_START_URL || '';
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
@@ -67,27 +69,18 @@ const Dashboard: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login', { replace: true });
+    navigate(`${START_URL}/login`, { replace: true });
   };
 
   // Generate timestamp for heatmap (hora completa sin minutos/segundos)
+  // Generate timestamp for heatmap (siempre día 1, hora 0 del mes seleccionado)
   const getHeatmapTimestamp = (): string => {
-    let date: Date;
+    const year = selectedYear || new Date().getFullYear();
+    const month = (selectedMonth || 1) - 1; // JavaScript months are 0-indexed
     
-    if (selectedDate) {
-      date = new Date(selectedDate);
-    } else {
-      const now = new Date();
-      date = new Date(
-        selectedYear || now.getFullYear(),
-        (selectedMonth || now.getMonth() + 1) - 1,
-        selectedDay || now.getDate(),
-        selectedHour ?? now.getHours()
-      );
-    }
+    // Siempre día 1, hora 1
+    const date = new Date(year, month, 1, 1, 0, 0, 0);
     
-    // Truncar a hora completa (eliminar minutos, segundos, milisegundos)
-    date.setMinutes(0, 0, 0);
     return date.toISOString();
   };
 
@@ -125,142 +118,88 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      {/* AppBar */}
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            ERCOT Pricing Dashboard
-          </Typography>
-          <IconButton color="inherit" onClick={handleLogout}>
-            <LogoutIcon />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
+  {/* AppBar */}
+  <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+    <Toolbar>
+      <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        ERCOT Pricing Dashboard
+      </Typography>
+      <IconButton color="inherit" onClick={handleLogout}>
+        <LogoutIcon />
+      </IconButton>
+    </Toolbar>
+  </AppBar>
 
-      {/* Filter Panel */}
-      <FilterPanel />
+  {/* Filter Panel */}
+  <FilterPanel />
 
-      {/* Main Content - Sin margen izquierdo para el mapa */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          mt: 8,
-          width: '100%',
-        }}
-      >
-        {/* Price Heatmap - Ancho completo empezando después del FilterPanel */}
-        <Paper sx={{ 
-          p: 2, 
-          mb: 3, 
-          width: 'calc(100% - 20px)', // Restar el ancho del FilterPanel
-          ml: '20px', // Margen izquierdo = ancho del FilterPanel
-          borderRadius: 0,
-          boxSizing: 'border-box'
-        }}>
-          <Typography variant="h6" gutterBottom>
-            Nodal Price Heatmap
-          </Typography>
-          <PriceHeatmap timestamp={getHeatmapTimestamp()} market={market} dataType={dataType} />
-        </Paper>
+  {/* Main Content - Ahora completamente responsivo */}
+  <Box
+    component="main"
+    sx={{
+      flexGrow: 1,
+      mt: 8,
+      width: { xs: '100%', sm: 'calc(100%)' }, // 280px es el ancho del FilterPanel
+      ml: { xs: 0 }, // Margen izquierdo = ancho del drawer
+    }}
+  >
+    {/* Price Heatmap - 100% del ancho disponible */}
+    <Paper sx={{ 
+      p: 2, 
+      mb: 3, 
+      width: '100%',
+      borderRadius: 0,
+      boxSizing: 'border-box'
+    }}>
+      <Typography variant="h6" gutterBottom>
+        Grid Cell Price Heatmap
+      </Typography>
+      <PriceHeatmap timestamp={getHeatmapTimestamp()} market={market} dataType={dataType} />
+    </Paper>
 
-        {/* Area Status Indicator */}
-        <Box sx={{ p: 3, ml: '20px' }}>
-          <AreaStatusIndicator timestamp={getHeatmapTimestamp()} market={market} />
-        </Box>
-
-        {/* Contenedor con padding para el resto del contenido */}
-        <Box sx={{ p: 3, ml: '20px' }}>
-          {/* Stats Cards */}
-          {/* {stats && (
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <Card>
-                  <CardContent>
-                    <Typography color="text.secondary" gutterBottom>
-                      Average
-                    </Typography>
-                    <Typography variant="h5">
-                      ${stats.avg?.toFixed(2) || 'N/A'}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <Card>
-                  <CardContent>
-                    <Typography color="text.secondary" gutterBottom>
-                      Maximum
-                    </Typography>
-                    <Typography variant="h5">
-                      ${stats.max?.toFixed(2) || 'N/A'}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <Card>
-                  <CardContent>
-                    <Typography color="text.secondary" gutterBottom>
-                      Minimum
-                    </Typography>
-                    <Typography variant="h5">
-                      ${stats.min?.toFixed(2) || 'N/A'}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <Card>
-                  <CardContent>
-                    <Typography color="text.secondary" gutterBottom>
-                      Data Points
-                    </Typography>
-                    <Typography variant="h5">{stats.count}</Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          )} */}
-
-          {/* Charts Grid */}
-          <Grid container spacing={3}>
-          {selectedNode1 && selectedYear && selectedDay !== undefined && selectedHour !== undefined && (
-            <>
-              <Grid size={{ xs: 12 }}>
-                <PriceEvolutionChart
-                  nodeId={selectedNode1}
-                  year={selectedYear}
-                  day={selectedDay}
-                  hour={selectedHour}
-                  dataType={dataType}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <PriceDistributionChart
-                  timestamp={getHeatmapTimestamp()}
-                  market={market}
-                  dataType={dataType}
-                />
-              </Grid>
-              {selectedNode1 && selectedNode2 && (
-                <Grid size={{ xs: 12 }}>
-                  <CongestionChart
-                    node1Id={selectedNode1}
-                    node2Id={selectedNode2}
-                    startDate={dateRange.start}
-                    endDate={dateRange.end}
-                  />
-                </Grid>
-              )}
-            </>
-          )}
-
-        </Grid>
-        </Box>
-        {/* Fin del contenedor con padding */}
-      </Box>
+    {/* Area Status Indicator */}
+    <Box sx={{ px: 2, py: 1 }}>
+      <AreaStatusIndicator timestamp={getHeatmapTimestamp()} market={market} />
     </Box>
+
+    {/* Resto del contenido */}
+    <Box sx={{ p: 2 }}>
+      {/* Charts Grid - Cada gráfica ocupa 100% */}
+      <Grid container spacing={2}>
+        {selectedNode1 && selectedYear && (
+          <>
+            <Grid size={{ xs: 12 }}>
+              <PriceEvolutionChart
+                nodeId={selectedNode1}
+                year={selectedYear}
+                day={selectedDay || 1}  // ← Usar valor del store con fallback
+                hour={selectedHour || 4}
+                dataType={dataType}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <PriceDistributionChart
+                timestamp={getHeatmapTimestamp()}
+                market={market}
+                dataType={dataType}
+              />
+            </Grid>
+            {selectedNode2 && (
+              <Grid size={{ xs: 12 }}>
+                <CongestionChart
+                  node1Id={selectedNode1}
+                  node2Id={selectedNode2}
+                  startDate={dateRange.start}
+                  endDate={dateRange.end}
+                />
+              </Grid>
+            )}
+          </>
+        )}
+      </Grid>
+    </Box>
+  </Box>
+</Box>
   );
 };
 
