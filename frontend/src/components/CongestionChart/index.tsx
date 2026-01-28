@@ -70,7 +70,7 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
   }));
 
   return (
-    <Paper sx={{ p: 2 }}>
+    <Box>
       <Typography variant="h6" gutterBottom>
         Congestion Pricing: {data[0]?.node1_code} vs {data[0]?.node2_code}
       </Typography>
@@ -100,7 +100,7 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
           <Line type="monotone" dataKey="congestion" stroke="#dc004e" name="Congestion" strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>
-    </Paper>
+    </Box>
   );
 };
 

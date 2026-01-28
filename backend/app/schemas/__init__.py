@@ -7,7 +7,7 @@ from app.schemas.schemas import (
     TimeSeriesData, NodePriceEvolution, YearlyComparison, NodeYearlyComparison,
     MonthlyComparison, NodeMonthlyComparison,
     PriceDistribution, NodePricePoint, AllNodesPriceDistribution, CongestionData,
-    AggregatedStats, PriceQueryFilters, AvailableYears,
+    AggregatedStats, SystemStats, PriceQueryFilters, AvailableYears,
     PaginatedResponse, ExportRequest
 )
 
@@ -20,6 +20,6 @@ __all__ = [
     "TimeSeriesData", "NodePriceEvolution", "YearlyComparison", "NodeYearlyComparison",
     "MonthlyComparison", "NodeMonthlyComparison",
     "PriceDistribution", "NodePricePoint", "AllNodesPriceDistribution", "CongestionData",
-    "AggregatedStats", "PriceQueryFilters", "AvailableYears",
+    "AggregatedStats", "SystemStats", "PriceQueryFilters", "AvailableYears",
     "PaginatedResponse", "ExportRequest"
 ]

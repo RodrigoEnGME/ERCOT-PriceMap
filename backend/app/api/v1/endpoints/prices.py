@@ -10,7 +10,7 @@ from app.schemas import (
     NodePriceEvolution, TimeSeriesData, NodeYearlyComparison, YearlyComparison,
     NodeMonthlyComparison, MonthlyComparison,
     PriceDistribution, NodePricePoint, AllNodesPriceDistribution,
-    CongestionData, AggregatedStats, AvailableYears,
+    CongestionData, AggregatedStats, AvailableYears, SystemStats,
     DataType, AggregationType
 )
 from app.api.dependencies import get_current_active_user
@@ -411,6 +411,42 @@ def get_congestion_pricing(
             ))
     
     return sorted(result, key=lambda x: x.timestamp)
+
+
+@router.get("/system-stats", response_model=SystemStats)
+def get_system_stats(
+    timestamp: datetime,
+    market: str = "ERCOT",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get system-wide aggregated statistics for a specific hour."""
+    # Truncate timestamp to the hour
+    hour_start = timestamp.replace(minute=0, second=0, microsecond=0)
+    hour_end = hour_start + timedelta(hours=1)
+
+    stats = (
+        db.query(
+            func.avg(PriceRecord.price).label('avg_price'),
+            func.sum(PriceRecord.solar_capture).label('total_solar'),
+            func.sum(PriceRecord.wind_capture).label('total_wind')
+        )
+        .filter(
+            and_(
+                PriceRecord.timestamp >= hour_start,
+                PriceRecord.timestamp < hour_end,
+                PriceRecord.market == market
+            )
+        )
+        .first()
+    )
+
+    return SystemStats(
+        avg_price=float(stats[0]) if stats[0] is not None else 0.0,
+        total_solar=float(stats[1]) if stats[1] is not None else 0.0,
+        total_wind=float(stats[2]) if stats[2] is not None else 0.0,
+        timestamp=hour_start
+    )
 
 
 @router.get("/stats/{node_id}", response_model=AggregatedStats)

@@ -17,6 +17,7 @@ class DataType(str, Enum):
     SOLAR_CAPTURE = "solar_capture"
     WIND_CAPTURE = "wind_capture"
     NEGATIVE_HOURS = "negative_hours"
+    NODES = "nodes"
 
 
 class AggregationType(str, Enum):
@@ -238,6 +239,14 @@ class AggregatedStats(BaseModel):
     max: Optional[float] = None
     min: Optional[float] = None
     count: int
+
+
+class SystemStats(BaseModel):
+    """System-wide aggregated statistics."""
+    avg_price: Optional[float] = None
+    total_solar: Optional[float] = None
+    total_wind: Optional[float] = None
+    timestamp: datetime
 
 
 # Filter Schemas

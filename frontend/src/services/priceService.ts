@@ -4,6 +4,7 @@ import {
   PriceDistribution,
   CongestionData,
   AggregatedStats,
+  SystemStats,
   AvailableYears,
   HourlySnapshot,
   DataType,
@@ -145,6 +146,19 @@ export const priceService = {
       '/prices/voronoi-map',
       {
         params: { timestamp, market, datatype: dataType },
+      }
+    );
+    return response.data;
+  },
+
+  async getSystemStats(
+    timestamp: string,
+    market: string = 'ERCOT'
+  ): Promise<SystemStats> {
+    const response = await apiClient.get<SystemStats>(
+      '/prices/system-stats',
+      {
+        params: { timestamp, market },
       }
     );
     return response.data;

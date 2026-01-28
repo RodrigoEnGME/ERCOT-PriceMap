@@ -91,7 +91,7 @@ const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }
   };
 
   return (
-    <Paper sx={{ p: 2 }}>
+    <Box>
       <Typography variant="h6" gutterBottom>
         Grid Cell Price Distribution
       </Typography>
@@ -119,7 +119,7 @@ const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }
           <Bar dataKey="price" fill="#82ca9d" name={getLabel()} />
         </BarChart>
       </ResponsiveContainer>
-    </Paper>
+    </Box>
   );
 };
 
