@@ -98,7 +98,7 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
   };
 
   return (
-    <Paper sx={{ p: 2 }}>
+    <Box>
       <Typography variant="h6" gutterBottom>
         {data.node_name} - Monthly Comparison {year}
       </Typography>
@@ -131,7 +131,7 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
           />
         </LineChart>
       </ResponsiveContainer>
-    </Paper>
+    </Box>
   );
 };
 

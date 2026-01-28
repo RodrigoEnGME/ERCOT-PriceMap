@@ -113,6 +113,13 @@ export interface AggregatedStats {
   count: number;
 }
 
+export interface SystemStats {
+  avg_price: number;
+  total_solar: number;
+  total_wind: number;
+  timestamp: string;
+}
+
 export interface AvailableYears {
   years: number[];
   markets: string[];

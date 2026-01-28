@@ -78,8 +78,9 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
       await loadAvailableYears();
       
       // 2. Setear valores por defecto de fechas
-      const defaultYear = 2025;
-      const defaultMonth = 12;
+      const now = new Date();
+      const defaultYear = now.getFullYear();
+      const defaultMonth = now.getMonth() + 1;
       
       setYear(defaultYear);
       setMonth(defaultMonth);
@@ -290,22 +291,6 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
               {node.name}
             </MenuItem>
           ))}
-        </Select>
-      </FormControl>
-
-      {/* Data Type */}
-      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-        <InputLabel>Data Type</InputLabel>
-        <Select
-          value={dataType}
-          label="Data Type"
-          onChange={(e) => setDataType(e.target.value as DataType)}
-        >
-          <MenuItem value={DataType.PRICE}>Price</MenuItem>
-          <MenuItem value={DataType.SOLAR_CAPTURE}>Solar Capture</MenuItem>
-          <MenuItem value={DataType.WIND_CAPTURE}>Wind Capture</MenuItem>
-          <MenuItem value={DataType.NEGATIVE_HOURS}>Negative Hours</MenuItem>
-          <MenuItem value={DataType.NODES}>Nodes</MenuItem>
         </Select>
       </FormControl>
 

@@ -60,7 +60,7 @@ const initialFilterState: FilterState = {
   selectedNode2: undefined,
   aggregationType: AggregationType.AVG,
   dataType: DataType.PRICE,
-  market: 'MDA',
+  market: 'ERCOT',
 };
 
 export const useFilterStore = create<FilterStore>((set) => ({
