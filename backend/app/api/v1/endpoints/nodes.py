@@ -15,7 +15,7 @@ router = APIRouter(prefix="/nodes", tags=["Nodes"])
 @router.get("", response_model=List[NodeResponse])
 def get_nodes(
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(200, ge=1, le=1000),
     market: Optional[str] = None,
     active_only: bool = True,
     db: Session = Depends(get_db),

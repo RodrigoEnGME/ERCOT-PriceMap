@@ -74,6 +74,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
 
   const initializeFilters = async () => {
     try {
+      setIsInitialized(false);
       // 1. Primero cargar años y mercados
       await loadAvailableYears();
       
@@ -93,16 +94,18 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
       await loadNodes();
       
       // 4. Marcar como inicializado
+      await new Promise(resolve => setTimeout(resolve, 500));
       setIsInitialized(true);
       
     } catch (err) {
       console.error('Failed to initialize filters', err);
+      setIsInitialized(true); 
     }
   };
 
   const loadNodes = async () => {
     try {
-      const nodeList = await nodeService.getNodes();
+      const nodeList = await nodeService.getNodes({ limit: 150 });
       console.log('Loaded nodes:', nodeList.length, 'nodes');
       setNodes(nodeList);
       
@@ -268,7 +271,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           </MenuItem>
           {nodes.map((node) => (
             <MenuItem key={node.id} value={node.id}>
-              {node.name}
+              #{node.name.includes('#') ? node.name.split('#')[1].trim() : node.name}
             </MenuItem>
           ))}
         </Select>
@@ -287,7 +290,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           </MenuItem>
           {nodes.map((node) => (
             <MenuItem key={node.id} value={node.id}>
-              {node.name}
+              #{node.name.includes('#') ? node.name.split('#')[1].trim() : node.name}
             </MenuItem>
           ))}
         </Select>
@@ -301,11 +304,11 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           label="Data Type"
           onChange={(e) => setDataType(e.target.value as DataType)}
         >
-          <MenuItem value={DataType.PRICE}>Price</MenuItem>
-          <MenuItem value={DataType.SOLAR_CAPTURE}>Solar Capture</MenuItem>
-          <MenuItem value={DataType.WIND_CAPTURE}>Wind Capture</MenuItem>
-          <MenuItem value={DataType.NEGATIVE_HOURS}>Negative Hours</MenuItem>
-          <MenuItem value={DataType.NODES}>Nodes</MenuItem>
+          <MenuItem value={DataType.PRICE}>LPMs Average</MenuItem>
+          <MenuItem value={DataType.SOLAR_CAPTURE}>Solar Captured Prices</MenuItem>
+          <MenuItem value={DataType.WIND_CAPTURE}>Wind Captured Prices</MenuItem>
+          <MenuItem value={DataType.NEGATIVE_HOURS}>Hours with Negative LPMs</MenuItem>
+          <MenuItem value={DataType.NODES}>Grid Cell Number</MenuItem>
         </Select>
       </FormControl>
 

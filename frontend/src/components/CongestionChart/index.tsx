@@ -63,7 +63,7 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
 
   const chartData = data.map((item) => ({
     timestamp: format(parseISO(item.timestamp), 'MMM yyyy'),
-    fullTimestamp: format(parseISO(item.timestamp), 'MMM dd, yyyy HH:mm'),
+    fullTimestamp: format(parseISO(item.timestamp), 'MMM yyyy'),
     node1_price: item.node1_price,
     node2_price: item.node2_price,
     congestion: item.congestion_price,
@@ -72,7 +72,7 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
-        Congestion Pricing: {data[0]?.node1_code} vs {data[0]?.node2_code}
+        Congestion Cost: {data[0]?.node1_code} to {data[0]?.node2_code}
       </Typography>
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={chartData}>
@@ -84,7 +84,7 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
             textAnchor="end"
             height={80}
           />
-          <YAxis label={{ value: 'Price ($/MWh)', angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />
+          <YAxis label={{ angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />
           <Tooltip 
             labelFormatter={(value: any) => {
               const item = chartData.find(d => d.timestamp === value);

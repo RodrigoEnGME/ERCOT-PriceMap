@@ -102,9 +102,9 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
       <Typography variant="h6" gutterBottom>
         {data.node_name} - Monthly Comparison {year}
       </Typography>
-      <Typography variant="body2" color="text.secondary" gutterBottom>
+      {/* <Typography variant="body2" color="text.secondary" gutterBottom>
         Average {getLabel()} per month
-      </Typography>
+      </Typography> */}
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -114,10 +114,16 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
           />
           <YAxis 
             tick={{ fontSize: 12 }}
-            label={{ value: getLabel(), angle: -90, position: 'insideLeft' }}
+            label={{ angle: -90, position: 'insideLeft' }}
           />
           <Tooltip 
-            formatter={(value: any) => value != null ? value.toFixed(2) : 'Sin datos'}
+            labelFormatter={(label) => `${label} ${year}`}
+            formatter={(value: any) => {
+              if (value == null) return ['Sin datos', ''];
+              const unit = dataType === DataType.NEGATIVE_HOURS ? 'Hours' : '$/MWh';
+                          
+              return [`${value.toFixed(2)} ${unit}`, ''];
+            }}
           />
           <Legend />
           <Line 

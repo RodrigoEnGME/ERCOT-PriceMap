@@ -87,6 +87,8 @@ const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }
         return 'Solar Capture (MW)';
       case DataType.WIND_CAPTURE:
         return 'Wind Capture (MW)';
+      case DataType.NEGATIVE_HOURS:
+        return 'Negative Price Hours';
     }
   };
 
@@ -95,18 +97,18 @@ const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }
       <Typography variant="h6" gutterBottom>
         Grid Cell Price Distribution
       </Typography>
-      <Typography variant="body2" color="text.secondary" gutterBottom>
+      {/* <Typography variant="body2" color="text.secondary" gutterBottom>
         {data.data.length} nodes ordered from highest to lowest price
-      </Typography>
+      </Typography> */}
       <ResponsiveContainer width="100%" height={350}>
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="rank" 
-            label={{ value: 'Node Ranking', position: 'insideBottom', offset: -5 }}
+            label={{ position: 'insideBottom', offset: -5 }}
             tick={{ fontSize: 10 }}
           />
-          <YAxis label={{ value: getLabel(), angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />
+          <YAxis label={{ value: '', angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />
           <Tooltip 
             formatter={(value: any, name: any, props: any) => {
               return [

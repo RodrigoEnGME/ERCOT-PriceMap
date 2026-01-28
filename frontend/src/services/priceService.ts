@@ -149,4 +149,21 @@ export const priceService = {
     );
     return response.data;
   },
+  async getStatusIndicators(
+    timestamp: string,
+    market: string = 'MDA',
+    dataType: DataType = DataType.PRICE
+  ): Promise<any[]> {
+    const response = await apiClient.get<any[]>(
+      '/prices/status-indicators',
+      {
+        params: { 
+          timestamp, 
+          market,
+          datatype: dataType
+        },
+      }
+    );
+    return response.data;
+  },
 };

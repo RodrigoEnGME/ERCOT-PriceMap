@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material';
+import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { theme } from './theme';
 import { useAuthStore } from './store';
@@ -35,23 +35,30 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <BrowserRouter>
-          <Routes>
-            <Route path={`${START_URL}/login`} element={<Login />} />
-            <Route
-              path={`${START_URL}/dashboard`}
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/" element={<Navigate to={`${START_URL}/dashboard`} />} />
-          </Routes>
-        </BrowserRouter>
+        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+          <BrowserRouter>
+            <Routes>
+              <Route path={`${START_URL}/login`} element={<Login />} />
+              <Route
+                path={`${START_URL}/dashboard`}
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/" element={<Navigate to={`${START_URL}/dashboard`} />} />
+            </Routes>
+          </BrowserRouter>
+        </Box>
       </ThemeProvider>
     </QueryClientProvider>
   );
 }
+//         </BrowserRouter>
+//       </ThemeProvider>
+//     </QueryClientProvider>
+//   );
+// }
 
 export default App;

@@ -76,24 +76,49 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const mapRef = useRef<L.Map | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     loadData();
   }, [timestamp, market, dataType]);
 
-  const loadData = async () => {
+  const loadData = async (isRetry: boolean = false) => {
     setLoading(true);
     setError('');
     try {
-      // console.log('Requesting Voronoi map data for timestamp:', timestamp, 'market:', market, 'dataType:', dataType);
+      console.log('Requesting Voronoi map data for timestamp:', timestamp, 'market:', market, 'dataType:', dataType);
+      
+      // Esperar un poco si es la primera carga
+      if (!isRetry && retryCount === 0) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      
       const data = await priceService.getVoronoiMap(timestamp, market, dataType as DataType);
-      // console.log('Loaded Voronoi data:', data.features?.length, 'polygons');
+      console.log('Loaded Voronoi data:', data.features?.length, 'polygons');
+      
       if (!data.features || data.features.length === 0) {
+        // Si no hay datos y es la primera vez, intentar de nuevo
+        if (retryCount < 2) {
+          console.log('No data, retrying...', retryCount + 1);
+          setRetryCount(retryCount + 1);
+          setTimeout(() => loadData(true), 1000);
+          return;
+        }
         setError('No data available for this timestamp. Make sure database is populated.');
       }
       setVoronoiData(data);
+      setRetryCount(0); // Reset retry count on success
     } catch (err: any) {
       const errorMsg = err.response?.data?.detail || err.message || 'Failed to load map data';
+      
+      // Retry logic
+      if (retryCount < 2) {
+        console.log('Error loading map, retrying...', retryCount + 1);
+        setRetryCount(retryCount + 1);
+        setTimeout(() => loadData(true), 1000);
+        return;
+      }
+      
       setError(errorMsg);
       console.error('Map load error:', err);
     } finally {
