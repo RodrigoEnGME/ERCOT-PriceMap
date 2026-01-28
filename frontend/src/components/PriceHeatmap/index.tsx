@@ -314,6 +314,21 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
   return (
     <Box sx={{ height: '500px', width: '100%', display: 'flex', gap: 2, position: 'relative' }}>
       <Box sx={{ flex: 1, position: 'relative' }}>
+        {/* Logo flotante */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            zIndex: 1000,
+            bgcolor: 'white',
+            borderRadius: 1,
+            p: 0.5,
+            boxShadow: 2,
+          }}
+        >
+          <img src="/favicon.ico" alt="Logo" style={{ width: 40, height: 40, display: 'block' }} />
+        </Box>
         <MapContainer
           center={center}
           zoom={INITIAL_ZOOM}

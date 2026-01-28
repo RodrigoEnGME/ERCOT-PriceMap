@@ -47,7 +47,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/" element={<Navigate to={`${START_URL}/dashboard`} />} />
+              {START_URL && <Route path={START_URL} element={<Navigate to={`${START_URL}/dashboard`} replace />} />}
+              <Route path="/" element={<Navigate to={`${START_URL}/dashboard`} replace />} />
             </Routes>
           </BrowserRouter>
         </Box>

@@ -113,7 +113,7 @@ const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }
             formatter={(value: any, name: any, props: any) => {
               return [
                 `${value.toFixed(2)}`,
-                `${props.payload.node_code}: ${props.payload.node_name}`
+                `${props.payload.node_code}`
               ];
             }}
           />
