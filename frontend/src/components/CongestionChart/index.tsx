@@ -91,8 +91,11 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
               return item?.fullTimestamp || value;
             }}
             formatter={(value:any)=>{
-              return typeof value === 'number' ? value.toFixed(2) : value;
+              if (value == null) return ['Sin datos', ''];
+
+              return [`${value.toFixed(2)} $/MWh`, ''];
             }}
+            separator=''
           />
           <Legend />
           {/* <Line type="monotone" dataKey="node1_price" stroke="#1976d2" name={`${data[0]?.node1_code} Price`} dot={false} />

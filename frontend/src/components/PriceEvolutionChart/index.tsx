@@ -124,6 +124,7 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
                           
               return [`${value.toFixed(2)} ${unit}`, ''];
             }}
+            separator=''
           />
           <Legend />
           <Line 
