@@ -300,14 +300,15 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
     { color: '#FF6347', label: '70 to 80' },
     { color: '#FF0000', label: '80 to 90' },
     { color: '#8B0000', label: '> 90' },
+    { color: '#FFFFFF', label: 'N/A' },
   ];
 
   const colorMapTags = {
-  'price': 'LPM ($/MWh)',
-  'solar_capture': 'Solar Capture ($/MW)',
-  'wind_capture': 'Wind Capture ($/MW)',
-  'negative_hours': 'Negative Hours [Hrs]',
-  'nodes': 'Grid Cell',
+  'price': 'LMPs ($/MWh)',
+  'solar_capture': 'LMPs ($/MWh)',
+  'wind_capture': 'LMPs ($/MWh)',
+  'negative_hours': '',
+  'nodes': '',
 
   }
 
@@ -327,7 +328,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
             boxShadow: 2,
           }}
         >
-          <img src="/favicon.ico" alt="Logo" style={{ width: 40, height: 40, display: 'block' }} />
+          <img src="/favicon.ico" alt="Logo" style={{ width: 80, height: 80, display: 'block' }} />
         </Box>
         <MapContainer
           center={center}

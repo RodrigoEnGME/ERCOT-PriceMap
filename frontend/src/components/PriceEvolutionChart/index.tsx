@@ -87,24 +87,35 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
   const getLabel = () => {
     switch (dataType) {
       case DataType.PRICE:
-        return 'Price ($/MWh)';
+        return 'LMPs [$/MWh]';
       case DataType.SOLAR_CAPTURE:
-        return 'Solar Capture (MW)';
+        return 'Energy Selling prices [$/MWh] solar generators';
       case DataType.WIND_CAPTURE:
-        return 'Wind Capture (MW)';
+        return 'Energy Selling prices [$/MWh] wind generators';
       case DataType.NEGATIVE_HOURS:
-        return 'Negative Hours';
+        return 'Number of negative LMPs';
     }
   };
-
+  const getSubtitle = () => {
+    switch (dataType) {
+      case DataType.PRICE:
+        return 'Historical values for all ERCOT settlements nodes located within the geographic area of the selected grid cell';
+      case DataType.SOLAR_CAPTURE:
+        return 'Historical values for solar generators located within the geographic area of the selected grid cell';
+      case DataType.WIND_CAPTURE:
+        return 'Historical values for wind generators located within the geographic area of the selected grid cell';
+      case DataType.NEGATIVE_HOURS:
+        return 'Historical values for all ERCOT settlements nodes located within the geographic area of the selected grid cell';
+    }
+  };
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
-        {data.node_name} - Monthly Comparison {year}
+        {data.node_name} - Monthly average
       </Typography>
-      {/* <Typography variant="body2" color="text.secondary" gutterBottom>
-        Average {getLabel()} per month
-      </Typography> */}
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        {getSubtitle()}
+      </Typography>
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />

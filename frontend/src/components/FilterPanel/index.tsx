@@ -304,11 +304,11 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           label="Data Type"
           onChange={(e) => setDataType(e.target.value as DataType)}
         >
-          <MenuItem value={DataType.PRICE}>LPMs Average</MenuItem>
-          <MenuItem value={DataType.SOLAR_CAPTURE}>Solar Captured Prices</MenuItem>
-          <MenuItem value={DataType.WIND_CAPTURE}>Wind Captured Prices</MenuItem>
-          <MenuItem value={DataType.NEGATIVE_HOURS}>Hours with Negative LPMs</MenuItem>
-          <MenuItem value={DataType.NODES}>Grid Cell Number</MenuItem>
+          <MenuItem value={DataType.PRICE}>#1: LPMs Average</MenuItem>
+          <MenuItem value={DataType.SOLAR_CAPTURE}>#2: Solar Captured Prices</MenuItem>
+          <MenuItem value={DataType.WIND_CAPTURE}>#3: Wind Captured Prices</MenuItem>
+          <MenuItem value={DataType.NEGATIVE_HOURS}>#4: Hours with Negative LPMs</MenuItem>
+          <MenuItem value={DataType.NODES}>#5: Grid Cell Number</MenuItem>
         </Select>
       </FormControl>
 

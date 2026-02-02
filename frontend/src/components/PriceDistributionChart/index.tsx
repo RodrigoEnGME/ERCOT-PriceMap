@@ -82,13 +82,13 @@ const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }
   const getLabel = () => {
     switch (dataType) {
       case DataType.PRICE:
-        return 'Price ($/MWh)';
+        return 'LMPs [$/MWh]';
       case DataType.SOLAR_CAPTURE:
-        return 'Solar Capture (MW)';
+        return 'Energy Selling prices [$/MWh] solar generators';
       case DataType.WIND_CAPTURE:
-        return 'Wind Capture (MW)';
+        return 'Energy Selling prices [$/MWh] wind generators';
       case DataType.NEGATIVE_HOURS:
-        return 'Negative Price Hours';
+        return 'Number of negative LMPs';
     }
   };
 

@@ -148,7 +148,10 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
       {/* Contenedor LMPs */}
       <Paper sx={{ p: 2, flex: 1 }}>
         <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
-          LMPs [USD/MWh]
+          LMPs [$/MWh]
+        </Typography>
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          LMPs monthly average
         </Typography>
         
         <Box sx={{ display: 'flex', gap: 3, justifyContent: 'space-evenly' }}>
@@ -177,7 +180,7 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
       {/* Contenedor Reserves - Separado */}
       <Paper sx={{ p: 2, flex: 1 }}>
         <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
-          Reserves [USD/kW]
+          Ancillary Services prices monthly average [$/MW]
         </Typography>
         
         <Box sx={{ display: 'flex', justifyContent: 'space-evenly' }}>
