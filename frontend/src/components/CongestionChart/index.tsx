@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { priceService } from '../../services/priceService';
-import { CongestionData } from '../../types';
+import { CongestionData, DataType } from '../../types';
 import { format, parseISO } from 'date-fns';
 
 interface Props {
@@ -10,9 +10,10 @@ interface Props {
   node2Id: number;
   startDate: string;
   endDate: string;
+  dataType: DataType;
 }
 
-const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate }) => {
+const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate, dataType }) => {
   const [data, setData] = useState<CongestionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,13 +22,13 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
     if (node1Id && node2Id) {
       loadData();
     }
-  }, [node1Id, node2Id, startDate, endDate]);
+  }, [node1Id, node2Id, startDate, endDate, dataType]);
 
   const loadData = async () => {
     setLoading(true);
     setError('');
     try {
-      const congestion = await priceService.getCongestionPricing(node1Id, node2Id, startDate, endDate);
+      const congestion = await priceService.getCongestionPricing(node1Id, node2Id, startDate, endDate, dataType);
       setData(congestion);
     } catch (err: any) {
       setError('Failed to load congestion data');
@@ -68,7 +69,18 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
     node2_price: item.node2_price,
     congestion: item.congestion_price,
   }));
-
+  const getLabel = () => {
+    switch(dataType) {
+      case DataType.PRICE:
+        return 'Congestion Cost [$/MWh] monthly average between the selected grid cells';
+      case DataType.SOLAR_CAPTURE:
+        return 'Congestion Cost [$/MWh] monthly average between the selected grid cells in solar production hours';
+      case DataType.WIND_CAPTURE:
+        return 'Congestion Cost [$/MWh] monthly average between the selected grid cells in wind production hours';
+      default:
+        return 'LMPs [$/MWh]';
+    }
+  }
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
@@ -100,7 +112,14 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
           <Legend />
           {/* <Line type="monotone" dataKey="node1_price" stroke="#1976d2" name={`${data[0]?.node1_code} Price`} dot={false} />
           <Line type="monotone" dataKey="node2_price" stroke="#dc004e" name={`${data[0]?.node2_code} Price`} dot={false} /> */}
-          <Line type="monotone" dataKey="congestion" stroke="#dc004e" name="Congestion" strokeWidth={2} dot={false} />
+          <Line
+             type="monotone"
+             dataKey="congestion" 
+             stroke="#dc004e" 
+             name={getLabel()}
+             strokeWidth={2} 
+             dot={false}
+             />
         </LineChart>
       </ResponsiveContainer>
     </Paper>

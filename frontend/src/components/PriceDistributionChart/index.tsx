@@ -95,7 +95,7 @@ const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
-        Grid Cell Price Distribution
+        Grid Cell Values geographic dispersion range (Y; - m: )
       </Typography>
       {/* <Typography variant="body2" color="text.secondary" gutterBottom>
         {data.data.length} nodes ordered from highest to lowest price

@@ -400,7 +400,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
             pb: 0.5
           }}
         >
-          {colorMapTags[dataType as keyof typeof colorMapTags] || 'Value'}
+          {colorMapTags[dataType as keyof typeof colorMapTags] || ''}
         </Typography>
         
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>

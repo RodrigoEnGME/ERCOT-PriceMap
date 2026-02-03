@@ -148,11 +148,11 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
       {/* Contenedor LMPs */}
       <Paper sx={{ p: 2, flex: 1 }}>
         <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
-          LMPs [$/MWh]
+          LMPs monthly average[$/MWh]
         </Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
+        {/* <Typography variant="body2" color="text.secondary" gutterBottom>
           LMPs monthly average
-        </Typography>
+        </Typography> */}
         
         <Box sx={{ display: 'flex', gap: 3, justifyContent: 'space-evenly' }}>
           {/* Hubs Column */}

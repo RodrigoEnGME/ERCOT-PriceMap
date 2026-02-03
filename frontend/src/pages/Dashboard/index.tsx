@@ -17,7 +17,7 @@ import {
 import LogoutIcon from '@mui/icons-material/Logout';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import { useNavigate } from 'react-router-dom';
+import { data, useNavigate } from 'react-router-dom';
 import { useAuthStore, useFilterStore } from '../../store';
 import FilterPanel from '../../components/FilterPanel';
 import PriceHeatmap from '../../components/PriceHeatmap';
@@ -25,7 +25,7 @@ import PriceEvolutionChart from '../../components/PriceEvolutionChart';
 import PriceDistributionChart from '../../components/PriceDistributionChart';
 import CongestionChart from '../../components/CongestionChart';
 import { priceService } from '../../services/priceService';
-import { AggregatedStats } from '../../types';
+import { AggregatedStats, DataType } from '../../types';
 import AreaStatusIndicator from '../../components/AreaStatusIndicator';
 
 const START_URL = import.meta.env.VITE_START_URL || '';
@@ -132,22 +132,6 @@ const Dashboard: React.FC = () => {
       end: end.toISOString(),
     };
   };
-  const dataTypeSubtitle = (dataType: string) => {
-    switch (dataType) {
-      case 'price':
-        return 'LMPs monthly average of all ERCOT settlements nodes located within the geographic area of each grid cell';
-      case 'solar_capture':
-        return 'Energy Selling prices, monthly average, for solar generators located within the geographic area of each grid cell';
-      case 'wind_capture':
-        return 'Energy Selling prices, monthly average, for wind generators located within the geographic area of each grid cell';
-      case 'negative_hours':
-        return 'Number of negative LMPs, monthly average, for all ERCOT settlements nodes located within the geographic area of the grid cell';
-      case 'nodes':
-        return 'Number that identifies each grid cell, including Hub Prices, LZ prices and Reserves prices';
-      default:
-        return '';
-    }
-  };
 
   const dateRange = getDateRange();
   const yearRange = getYearRange();
@@ -200,10 +184,7 @@ const Dashboard: React.FC = () => {
         borderRadius: 2,
       }}>
         <Typography variant="h6" gutterBottom>
-          Grid Cell Heatmap
-        </Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          {dataTypeSubtitle(dataType)}
+          Grid Cell Price Heatmap
         </Typography>
         <PriceHeatmap 
           key={`${getHeatmapTimestamp()}-${market}-${dataType}`} 
@@ -222,7 +203,7 @@ const Dashboard: React.FC = () => {
       </Box>
 
       <Grid container spacing={2}>
-        {selectedNode1 && selectedYear && (
+        {selectedNode1 && selectedYear && (dataType!==DataType.NODES) &&(
           <>
             <Grid size={{ xs: 12 }}>
               <PriceEvolutionChart
@@ -240,13 +221,14 @@ const Dashboard: React.FC = () => {
                 dataType={dataType}
               />
             </Grid>
-            {selectedNode2 && (
+            {selectedNode2 && (dataType===DataType.PRICE || dataType===DataType.SOLAR_CAPTURE || dataType===DataType.WIND_CAPTURE) && (
               <Grid size={{ xs: 12 }}>
                 <CongestionChart
                   node1Id={selectedNode1}
                   node2Id={selectedNode2}
                   startDate={dateRange.start}
                   endDate={dateRange.end}
+                  dataType={dataType}
                 />
               </Grid>
             )}
@@ -372,6 +354,7 @@ const Dashboard: React.FC = () => {
               node2Id={selectedNode2}
               startDate={dateRange.start}
               endDate={dateRange.end}
+              dataType={dataType}
             />
           </Grid>
         )}

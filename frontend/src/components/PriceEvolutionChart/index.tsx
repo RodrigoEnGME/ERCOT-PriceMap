@@ -13,6 +13,7 @@ interface Props {
 }
 
 interface MonthlyData {
+  chart_year: number;
   month: number;
   value: number | null;
 }
@@ -80,7 +81,9 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
   }
 
   const chartData = data.data.map((item) => ({
+    chart_year: item.chart_year,
     month: MONTH_NAMES[item.month - 1],
+    timestamp: `${MONTH_NAMES[item.month - 1]} ${item.chart_year}`, // Nueva propiedad para el eje X
     value: item.value,
   }));
 
@@ -99,13 +102,13 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
   const getSubtitle = () => {
     switch (dataType) {
       case DataType.PRICE:
-        return 'Historical values for all ERCOT settlements nodes located within the geographic area of the selected grid cell';
+        return 'Historical values for all ERCOT settlements points located within the geographic area of the selected grid cell';
       case DataType.SOLAR_CAPTURE:
         return 'Historical values for solar generators located within the geographic area of the selected grid cell';
       case DataType.WIND_CAPTURE:
         return 'Historical values for wind generators located within the geographic area of the selected grid cell';
       case DataType.NEGATIVE_HOURS:
-        return 'Historical values for all ERCOT settlements nodes located within the geographic area of the selected grid cell';
+        return 'Historical values for all ERCOT settlements points located within the geographic area of the selected grid cell';
     }
   };
   return (
@@ -120,20 +123,28 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
-            dataKey="month" 
+            dataKey="timestamp"  // Cambiar de "month" a "timestamp"
             tick={{ fontSize: 12 }}
+            angle={-45}           // Agregar ángulo como en congestion
+            textAnchor="end"      // Agregar anchor
+            height={80}           // Agregar altura
           />
           <YAxis 
             tick={{ fontSize: 12 }}
             label={{ angle: -90, position: 'insideLeft' }}
           />
           <Tooltip 
-            labelFormatter={(label) => `${label} ${year}`}
+            labelFormatter={(label, payload) => {
+              if (payload && payload.length > 0 && payload[0].payload) {
+                const chart_year = payload[0].payload.chart_year;
+                return `${label} ${chart_year}`;
+              }
+              return label;
+            }}
             formatter={(value: any) => {
-              if (value == null) return ['Sin datos', ''];
+              if (value == null) return 'Sin datos';
               const unit = dataType === DataType.NEGATIVE_HOURS ? 'Hours' : '$/MWh';
-                          
-              return [`${value.toFixed(2)} ${unit}`, ''];
+              return `${value.toFixed(2)} ${unit}`;
             }}
             separator=''
           />

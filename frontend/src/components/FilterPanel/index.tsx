@@ -304,10 +304,10 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           label="Data Type"
           onChange={(e) => setDataType(e.target.value as DataType)}
         >
-          <MenuItem value={DataType.PRICE}>#1: LPMs Average</MenuItem>
+          <MenuItem value={DataType.PRICE}>#1: LMPs Average</MenuItem>
           <MenuItem value={DataType.SOLAR_CAPTURE}>#2: Solar Captured Prices</MenuItem>
           <MenuItem value={DataType.WIND_CAPTURE}>#3: Wind Captured Prices</MenuItem>
-          <MenuItem value={DataType.NEGATIVE_HOURS}>#4: Hours with Negative LPMs</MenuItem>
+          <MenuItem value={DataType.NEGATIVE_HOURS}>#4: Hours with Negative LMPs</MenuItem>
           <MenuItem value={DataType.NODES}>#5: Grid Cell Number</MenuItem>
         </Select>
       </FormControl>
@@ -330,7 +330,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
       <Divider sx={{ my: 2 }} />
 
       {/* Export Button */}
-      <Button
+      {/* <Button
         variant="contained"
         fullWidth
         startIcon={<DownloadIcon />}
@@ -338,12 +338,12 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
         sx={{ mb: 1 }}
       >
         Export to Excel
-      </Button>
+      </Button> */}
 
       {/* Reset Filters */}
-      <Button variant="outlined" fullWidth onClick={resetFilters}>
+      {/* <Button variant="outlined" fullWidth onClick={resetFilters}>
         Reset Filters
-      </Button>
+      </Button> */}
     </Drawer>
   );
 };

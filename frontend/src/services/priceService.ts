@@ -95,7 +95,8 @@ export const priceService = {
     node1Id: number,
     node2Id: number,
     startDate: string,
-    endDate: string
+    endDate: string,
+    dataType: DataType = DataType.PRICE
   ): Promise<CongestionData[]> {
     const response = await apiClient.get<CongestionData[]>('/prices/congestion', {
       params: {
@@ -103,6 +104,7 @@ export const priceService = {
         node2_id: node2Id,
         start_date: startDate,
         end_date: endDate,
+        datatype: dataType,
       },
     });
     return response.data;
