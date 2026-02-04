@@ -279,7 +279,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType, showDetail
     return (
       <Box p={2}>
         <Typography color="warning.main" gutterBottom>
-          No nodes with data found for the selected timestamp.
+          No grid with data found for the selected timestamp.
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Please select a different date/hour or populate the database.

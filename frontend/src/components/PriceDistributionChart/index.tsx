@@ -91,11 +91,13 @@ const PriceDistributionChart: React.FC<Props> = ({ timestamp, market, dataType }
         return 'Number of negative LMPs';
     }
   };
-
+  const year = new Date(timestamp).getUTCFullYear();
+  const month = new Date(timestamp).getUTCMonth() + 1;
+  
   return (
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
-        Grid Cell Values geographic dispersion range (Y; - m: )
+        Grid Cell Values geographic dispersion range (Year: {year} - Month: {month} )
       </Typography>
       {/* <Typography variant="body2" color="text.secondary" gutterBottom>
         {data.data.length} nodes ordered from highest to lowest price

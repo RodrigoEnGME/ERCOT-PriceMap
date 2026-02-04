@@ -15,29 +15,29 @@ class ApiClient {
     });
 
     // Request interceptor to add token
-    this.client.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
+    // this.client.interceptors.request.use(
+    //   (config) => {
+    //     const token = localStorage.getItem('access_token');
+    //     if (token) {
+    //       config.headers.Authorization = `Bearer ${token}`;
+    //     }
+    //     return config;
+    //   },
+    //   (error) => Promise.reject(error)
+    // );
 
-    // Response interceptor to handle errors
-    this.client.interceptors.response.use(
-      (response) => response,
-      (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          // Token expired or invalid
-          localStorage.removeItem('access_token');
-          window.location.href = `${START_URL}/login`;
-        }
-        return Promise.reject(error);
-      }
-    );
+    // // Response interceptor to handle errors
+    // this.client.interceptors.response.use(
+    //   (response) => response,
+    //   (error: AxiosError) => {
+    //     if (error.response?.status === 401) {
+    //       // Token expired or invalid
+    //       localStorage.removeItem('access_token');
+    //       window.location.href = `${START_URL}/login`;
+    //     }
+    //     return Promise.reject(error);
+    //   }
+    // );
   }
 
   getInstance(): AxiosInstance {

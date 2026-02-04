@@ -87,7 +87,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
       setDay(1);
       setHour(0);
       
-      const defaultDate = new Date(defaultYear, defaultMonth - 1, 1, 0, 0, 0);
+      const defaultDate = new Date(Date.UTC(defaultYear, defaultMonth - 1, 1, 0, 0, 0));
       setDate(defaultDate);
       
       // 3. Luego cargar nodos
@@ -147,7 +147,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
     setHour(0);
     
     // Actualizar selectedDate con día 1, hora 0
-    const newDate = new Date(year, (selectedMonth || 1) - 1, 1, 0, 0, 0);
+    const newDate = new Date(Date.UTC(year, (selectedMonth || 1) - 1, 1, 0, 0, 0));
     setDate(newDate);
   };
 
@@ -157,7 +157,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
     setHour(0);
     
     // Actualizar selectedDate con día 1, hora 0
-    const newDate = new Date(selectedYear || new Date().getFullYear(), month - 1, 1, 0, 0, 0);
+    const newDate = new Date(Date.UTC(selectedYear || new Date().getFullYear(), month - 1, 1, 0, 0, 0));
     setDate(newDate);
   };
 
@@ -170,8 +170,8 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
     const nodeIds = [selectedNode1];
     if (selectedNode2) nodeIds.push(selectedNode2);
 
-    const startDate = new Date(selectedYear || new Date().getFullYear(), 0, 1);
-    const endDate = new Date((selectedYear || new Date().getFullYear()) + 1, 0, 1);
+    const startDate = new Date(Date.UTC(selectedYear || new Date().getFullYear(), 0, 1));
+    const endDate = new Date(Date.UTC((selectedYear || new Date().getFullYear()) + 1, 0, 1));
 
     try {
       const blob = await exportService.exportToExcel({
@@ -252,7 +252,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
         >
           {markets.map((m) => (
             <MenuItem key={m} value={m}>
-              {m}
+              DAM
             </MenuItem>
           ))}
         </Select>

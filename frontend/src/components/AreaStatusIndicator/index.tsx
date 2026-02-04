@@ -86,6 +86,7 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
   const hubs = data.filter((n: NodeStatus) => ['HB_Huston','HB_North','HB_Pan','HB_South','HB_West'].includes(n.name));
   const loadZones = data.filter((n: NodeStatus) => ['LZ_CPS', 'LZ_Huston', 'LZ_LCRA', 'LZ_North', 'LZ_South', 'LZ_West'].includes(n.name));
   const reserves = data.filter((n: NodeStatus) => ['Reg-Up', 'Reg-Down', 'RRS', 'ECRS', 'Non-Spin'].includes(n.name));
+  const reservesNames = ['Reg-Up', 'Reg-Down', 'RRS', 'ECRS', 'Non-Spin']
 
   const newNames: { [key: string]: string } = {
     'HB_Huston': 'HB_Huston',
@@ -106,8 +107,53 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
     'Non-Spin': 'Non-Spin'
   };
 
+  const gridCellNumber = {
+    'HB_Huston':151,
+    'HB_North':152,
+    'HB_Pan':153,
+    'HB_South':154,
+    'HB_West':155,
+    'LZ_CPS':156,
+    'LZ_Huston':157,
+    'LZ_LCRA':158,
+    'LZ_North':159,
+    'LZ_South':160,
+    'LZ_West':161,
+    'Reg-Up':162,
+    'Reg-Down':163,
+    'RRS':164,
+    'ECRS':165,
+    'Non-Spin':166,
+  }
+
+  const getTitle = () => {
+    switch (dataType) {
+      case DataType.PRICE:
+        return 'LMPs monthly average[$/MWh]';
+      case DataType.NODES:
+        return '';
+      default:
+        return 'LMPs monthly average[$/MWh]';
+    }
+  };
+  const getReserveTitle = () => {
+    switch (dataType) {
+      case DataType.PRICE:
+        return 'Ancillary Services prices monthly average [$/MW]';
+      case DataType.NODES:
+        return 'Ancillary Services';
+      default:
+        return 'Ancillary Services prices monthly average [$/MW]';
+    }
+  };
+
   const StatusCircle: React.FC<{ node: NodeStatus }> = ({ node }) => {
-    const displayValue = node.value !== null ? Math.round(node.value) : '-';
+    const displayValue = dataType === DataType.NODES 
+    ? (gridCellNumber[node.name as keyof typeof gridCellNumber] || '-')
+    : (node.value !== null ? Math.round(node.value) : '-');
+    const colorValue = dataType === DataType.NODES 
+    ? (gridCellNumber[node.name as keyof typeof gridCellNumber] || null)
+    : (node.value !== null ? Math.round(node.value) : null);
     
     return (
       <Box
@@ -123,7 +169,7 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
             width: 30,
             height: 30,
             borderRadius: '50%',
-            backgroundColor: getPriceColor(node.value),
+            backgroundColor: getPriceColor(colorValue),
             border: '2px solid #333',
             flexShrink: 0,
             display: 'flex',
@@ -131,7 +177,7 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
             justifyContent: 'center',
             fontWeight: 'bold',
             fontSize: '0.75rem',
-            color: getTextColor(node.value),
+            color: getTextColor(colorValue),
           }}
         >
           {displayValue}
@@ -142,13 +188,48 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
       </Box>
     );
   };
-
+  const ReservesCircle: React.FC<{ node:string }> = ({ node }) => {
+    const displayValue = gridCellNumber[node as keyof typeof gridCellNumber] || '-'
+    
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          mb: 0.5,
+        }}
+      >
+        <Box
+          sx={{
+            width: 30,
+            height: 30,
+            borderRadius: '50%',
+            backgroundColor: getPriceColor(gridCellNumber[node as keyof typeof gridCellNumber]),
+            border: '2px solid #333',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            fontSize: '0.75rem',
+            color: getTextColor(gridCellNumber[node as keyof typeof gridCellNumber]),
+          }}
+        >
+          {displayValue}
+        </Box>
+        <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+          {node}
+        </Typography>
+      </Box>
+    );
+  };
   return (
     <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
       {/* Contenedor LMPs */}
       <Paper sx={{ p: 2, flex: 1 }}>
         <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
-          LMPs monthly average[$/MWh]
+          {getTitle()}
         </Typography>
         {/* <Typography variant="body2" color="text.secondary" gutterBottom>
           LMPs monthly average
@@ -180,20 +261,25 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
       {/* Contenedor Reserves - Separado */}
       {
 
-        dataType === DataType.PRICE && (<Paper sx={{ p: 2, flex: 1 }}>
-        <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
-          Ancillary Services prices monthly average [$/MW]
-        </Typography>
-        
-        <Box sx={{ display: 'flex', justifyContent: 'space-evenly' }}>
-          <Box sx={{ minWidth: 180 }}>
-            {reserves.map((node: NodeStatus) => (
-              <StatusCircle key={node.node_id} node={node} />
-            ))}
-          </Box>
-        </Box>
-      </Paper>)
-          }
+          (dataType === DataType.PRICE || dataType === DataType.NODES) && (
+          <Paper sx={{ p: 2, flex: 1 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              {getReserveTitle()}
+            </Typography>
+            
+            <Box sx={{ display: 'flex', justifyContent: 'space-evenly' }}>
+              <Box sx={{ minWidth: 180 }}>
+                {dataType === DataType.PRICE && reserves.map((node: NodeStatus) => (
+                  <StatusCircle key={node.node_id} node={node} />
+                ))}
+                {dataType === DataType.NODES && reservesNames.map((node: string) => (
+                  <ReservesCircle key={node} node={node} />
+                ))}
+                
+              </Box>
+            </Box>
+          </Paper>
+          )}
     </Box>
   );
 };

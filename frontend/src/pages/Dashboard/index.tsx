@@ -35,8 +35,8 @@ const DRAWER_WIDTH = 280;
 type ViewMode = 'list' | 'grid';
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout);
+  // const navigate = useNavigate();
+  // const logout = useAuthStore((state) => state.logout);
   const { 
     selectedYear, 
     selectedMonth, 
@@ -69,8 +69,8 @@ const Dashboard: React.FC = () => {
   const loadStats = async () => {
     if (!selectedNode1 || !selectedYear) return;
 
-    const startDate = new Date(selectedYear, 0, 1);
-    const endDate = new Date(selectedYear + 1, 0, 1);
+    const startDate = new Date(Date.UTC(selectedYear, 0, 1));
+    const endDate = new Date(Date.UTC(selectedYear + 1, 0, 1));
 
     try {
       const aggregatedStats = await priceService.getAggregatedStats(
@@ -86,10 +86,10 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate(`${START_URL}/login`, { replace: true });
-  };
+  // const handleLogout = () => {
+    // logout();
+    // navigate(`${START_URL}/login`, { replace: true });
+  // };
 
   const handleViewModeChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -101,21 +101,21 @@ const Dashboard: React.FC = () => {
   };
 
   const getHeatmapTimestamp = (): string => {
-    const year = selectedYear || new Date().getFullYear();
+    const year = selectedYear || 2025;
     const month = (selectedMonth || 1) - 1;
-    const date = new Date(year, month, 1, 1, 0, 0, 0);
+    const date = new Date(Date.UTC(year, month, 1, 1, 0, 0, 0));
     return date.toISOString();
   };
 
   const getDateRange = () => {
     if (!selectedYear) return { start: '', end: '' };
     
-    const start = new Date(selectedYear, (selectedMonth || 1) - 1, selectedDay || 1);
+    const start = new Date(Date.UTC(selectedYear, (selectedMonth || 1) - 1, selectedDay || 1));
     const end = selectedMonth && selectedDay
-      ? new Date(selectedYear, (selectedMonth || 1) - 1, selectedDay || 1, 23, 59, 59)
+      ? new Date(Date.UTC(selectedYear, (selectedMonth || 1) - 1, selectedDay || 1, 23, 59, 59))
       : selectedMonth
-      ? new Date(selectedYear, selectedMonth, 0, 23, 59, 59)
-      : new Date(selectedYear, 11, 31, 23, 59, 59);
+      ? new Date(Date.UTC(selectedYear, selectedMonth, 0, 23, 59, 59))
+      : new Date(Date.UTC(selectedYear, 11, 31, 23, 59, 59));
     
     return {
       start: start.toISOString(),
@@ -126,8 +126,8 @@ const Dashboard: React.FC = () => {
   const getYearRange = () => {
     if (!selectedYear) return { start: '', end: '' };
     
-    const start = new Date(selectedYear, 0, 1, 0, 0, 0);
-    const end = new Date(selectedYear, 11, 31, 23, 59, 59);
+    const start = new Date(Date.UTC(selectedYear, 0, 1, 0, 0, 0));
+    const end = new Date(Date.UTC(selectedYear, 11, 31, 23, 59, 59));
     
     return {
       start: start.toISOString(),
@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
       case DataType.WIND_CAPTURE:
         return 'Energy Selling prices, monthly average, for wind generators located within the geographic area of each grid cell';
       case DataType.NEGATIVE_HOURS:
-        return 'Number of negative LMPs, monthly average, for all ERCOT settlements nodes located within the geographic area of the grid cell';
+        return 'Number of hours with negative LMPs, monthly average, for all ERCOT settlements points within the geographic area of the grid cell';
       case DataType.NODES:
         return 'Number that identifies each grid cell, including Hub Prices, LZ prices and Reserves prices';
     }
@@ -161,9 +161,9 @@ const Dashboard: React.FC = () => {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               ERCOT Pricing Dashboard
             </Typography>
-            <IconButton color="inherit" onClick={handleLogout}>
+            {/* <IconButton color="inherit" onClick={handleLogout}>
               <LogoutIcon />
-            </IconButton>
+            </IconButton> */}
           </Toolbar>
         </AppBar>
         
@@ -442,9 +442,9 @@ const Dashboard: React.FC = () => {
             </ToggleButton>
           </ToggleButtonGroup> */}
 
-          <IconButton color="inherit" onClick={handleLogout}>
+          {/* <IconButton color="inherit" onClick={handleLogout}>
             <LogoutIcon />
-          </IconButton>
+          </IconButton> */}
         </Toolbar>
       </AppBar>
 
