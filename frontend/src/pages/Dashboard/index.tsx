@@ -12,7 +12,8 @@ import {
   CircularProgress,
   ToggleButtonGroup,
   ToggleButton,
-  Divider
+  Divider,
+  Button,
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ViewListIcon from '@mui/icons-material/ViewList';
@@ -51,6 +52,7 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<AggregatedStats | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [showDetailedMap, setShowDetailedMap] = useState(false);
 
   useEffect(() => {
     const checkReady = () => {
@@ -136,6 +138,21 @@ const Dashboard: React.FC = () => {
   const dateRange = getDateRange();
   const yearRange = getYearRange();
 
+  const getSubtitle = () => {
+    switch (dataType) {
+      case DataType.PRICE:
+        return 'LMPs monthly average of all ERCOT settlements points located within the geographic area of each grid cell';
+      case DataType.SOLAR_CAPTURE:
+        return 'Energy Selling prices, monthly average, for solar generators located within the geographic area of each grid cell';
+      case DataType.WIND_CAPTURE:
+        return 'Energy Selling prices, monthly average, for wind generators located within the geographic area of each grid cell';
+      case DataType.NEGATIVE_HOURS:
+        return 'Number of negative LMPs, monthly average, for all ERCOT settlements nodes located within the geographic area of the grid cell';
+      case DataType.NODES:
+        return 'Number that identifies each grid cell, including Hub Prices, LZ prices and Reserves prices';
+    }
+  };
+
   if (!isReady) {
     return (
       <Box sx={{ display: 'flex' }}>
@@ -186,12 +203,48 @@ const Dashboard: React.FC = () => {
         <Typography variant="h6" gutterBottom>
           Grid Cell Price Heatmap
         </Typography>
+        <Typography variant="body2" component="div" sx={{ flexGrow: 1 }}>
+          {getSubtitle()}
+        </Typography>
+        
         <PriceHeatmap 
           key={`${getHeatmapTimestamp()}-${market}-${dataType}`} 
           timestamp={getHeatmapTimestamp()} 
           market={market} 
           dataType={dataType} 
+          showDetailedMap={showDetailedMap}
         />
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end', mt: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                Detailed Map View:
+            </Typography>
+            <Button
+              variant={!showDetailedMap ? "contained" : "outlined"}
+              onClick={() => setShowDetailedMap(false)}
+              // fullWidth
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.85rem',
+                py: 1
+              }}
+            >
+              Plain
+            </Button>
+            <Button
+              variant={showDetailedMap ? "contained" : "outlined"}
+              onClick={() => setShowDetailedMap(true)}
+              // fullWidth
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.85rem',
+                py: 1
+              }}
+            >
+              Detailed
+            </Button>
+          </Box>
+        </Box>
       </Paper>
 
       <Box sx={{ mb: 3 }}>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, GeoJSON, Marker, useMap } from 'react-leaflet';
-import { Box, Typography, CircularProgress, Paper } from '@mui/material';
+import { Box, Typography, CircularProgress, Paper, Button } from '@mui/material';
 import { priceService } from '../../services/priceService';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -10,6 +10,7 @@ interface Props {
   timestamp: string;
   market: string;
   dataType?: string;
+  showDetailedMap?: boolean;
 }
 
 interface VoronoiFeature {
@@ -71,7 +72,7 @@ const ZoomLogger: React.FC = () => {
   return null;
 };
 
-const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
+const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType, showDetailedMap }) => {
   const [voronoiData, setVoronoiData] = useState<VoronoiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -154,12 +155,21 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
   };
 
   const getPolygonStyle = (feature: VoronoiFeature) => {
+    if (!showDetailedMap) {
     return {
       fillColor: getPriceColor(feature.properties.value ?? feature.properties.price),
-      fillOpacity: 0.7,
       color: '#666',
       weight: 0.5,
+      fillOpacity: 0.7,
     };
+  }else{
+    return {
+      fillColor: getPriceColor(feature.properties.value ?? feature.properties.price),
+      color: '#666',
+      weight: 0.5,
+      fillOpacity: 0.2,
+    };
+  }
   };
 
   const onEachFeature = (feature: any, layer: any) => {
@@ -300,7 +310,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
     { color: '#FF6347', label: '70 to 80' },
     { color: '#FF0000', label: '80 to 90' },
     { color: '#8B0000', label: '> 90' },
-    { color: '#FFFFFF', label: 'N/A' },
+    { color: '#FFFFFF', label: 'N/D' },
   ];
 
   const colorMapTags = {
@@ -313,7 +323,9 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
   }
 
   return (
+    
     <Box sx={{ height: '500px', width: '100%', display: 'flex', gap: 2, position: 'relative' }}>
+      
       <Box sx={{ flex: 1, position: 'relative' }}>
         {/* Logo flotante */}
         <Box
@@ -351,11 +363,18 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
         >
           <MapInvalidator />
           <ZoomLogger />
-          <TileLayer
+          {showDetailedMap && (
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+          )}
+
+          {!showDetailedMap &&(<TileLayer
             attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
             opacity={1}
-          />
+          />)}
           {voronoiData && (
             <GeoJSON
               data={voronoiData as any}
@@ -420,8 +439,16 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
                   backgroundColor: item.color,
                   border: '1px solid #333',
                   flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  // fontWeight: 'bold',
+                  fontSize: '0.5rem',
+                  color: '#333',
                 }}
-              />
+              >
+                {item.color.toLowerCase() === '#ffffff' || item.color.toLowerCase() === 'white' ? '−' : null}
+              </Box>
               <Typography 
                 variant="caption" 
                 sx={{ fontSize: '0.75rem', color: '#333' }}
