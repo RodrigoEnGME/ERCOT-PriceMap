@@ -105,7 +105,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
 
   const loadNodes = async () => {
     try {
-      const nodeList = await nodeService.getNodes({ limit: 150 });
+      const nodeList = await nodeService.getNodes({ limit: 161 });
       console.log('Loaded nodes:', nodeList.length, 'nodes');
       setNodes(nodeList);
       
