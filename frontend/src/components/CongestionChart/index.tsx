@@ -95,8 +95,12 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
             angle={-45}
             textAnchor="end"
             height={80}
+            padding={{ left: 0, right: 0 }}
           />
-          <YAxis label={{ angle: -90, position: 'insideLeft' }} tick={{ fontSize: 12 }} />
+          <YAxis 
+          tick={{ fontSize: 12 }} 
+          label={{ angle: -90, position: 'insideLeft' }} 
+          />
           <Tooltip 
             labelFormatter={(value: any) => {
               const item = chartData.find(d => d.timestamp === value);
@@ -113,12 +117,13 @@ const CongestionChart: React.FC<Props> = ({ node1Id, node2Id, startDate, endDate
           {/* <Line type="monotone" dataKey="node1_price" stroke="#1976d2" name={`${data[0]?.node1_code} Price`} dot={false} />
           <Line type="monotone" dataKey="node2_price" stroke="#dc004e" name={`${data[0]?.node2_code} Price`} dot={false} /> */}
           <Line
-             type="monotone"
+             type="linear"
              dataKey="congestion" 
              stroke="#dc004e" 
              name={getLabel()}
+             connectNulls={false}
              strokeWidth={2} 
-             dot={false}
+             dot={{ r: 4 }}
              />
         </LineChart>
       </ResponsiveContainer>

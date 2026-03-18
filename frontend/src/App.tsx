@@ -3,8 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { theme } from './theme';
-import { useAuthStore } from './store';
-import Login from './pages/Login';
+// import { useAuthStore } from './store';
+// import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
 const START_URL = import.meta.env.VITE_START_URL || '';
@@ -18,17 +18,17 @@ const queryClient = new QueryClient({
   },
 });
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const token = useAuthStore((state) => state.token);
+// const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+//   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+//   const token = useAuthStore((state) => state.token);
   
-  // Si hay token en localStorage o en el store, está autenticado
-  if (isAuthenticated || token) {
-    return <>{children}</>;
-  }
+//   // Si hay token en localStorage o en el store, está autenticado
+//   if (isAuthenticated || token) {
+//     return <>{children}</>;
+//   }
   
-  return <Navigate to={`${START_URL}/login`} replace />;
-};
+//   return <Navigate to={`${START_URL}/login`} replace />;
+// };
 
 function App() {
   return (
@@ -38,17 +38,18 @@ function App() {
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
           <BrowserRouter>
             <Routes>
-              <Route path={`${START_URL}/login`} element={<Login />} />
+              {/* <Route path={`${START_URL}/login`} element={<Login />} /> */}
               <Route
                 path={`${START_URL}/dashboard`}
                 element={
-                  <ProtectedRoute>
+                  // <ProtectedRoute>
                     <Dashboard />
-                  </ProtectedRoute>
+                  // </ProtectedRoute>
                 }
               />
               {START_URL && <Route path={START_URL} element={<Navigate to={`${START_URL}/dashboard`} replace />} />}
               <Route path="/" element={<Navigate to={`${START_URL}/dashboard`} replace />} />
+              <Route path="*" element={<Navigate to={`${START_URL}/dashboard`} replace />} />
             </Routes>
           </BrowserRouter>
         </Box>

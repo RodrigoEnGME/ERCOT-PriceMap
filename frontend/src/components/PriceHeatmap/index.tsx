@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, GeoJSON, Marker, useMap } from 'react-leaflet';
-import { Box, Typography, CircularProgress, Paper } from '@mui/material';
+import { Box, Typography, CircularProgress, Paper, Button } from '@mui/material';
 import { priceService } from '../../services/priceService';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -10,6 +10,7 @@ interface Props {
   timestamp: string;
   market: string;
   dataType?: string;
+  showDetailedMap?: boolean;
 }
 
 interface VoronoiFeature {
@@ -54,11 +55,11 @@ const ZoomLogger: React.FC = () => {
   
   useEffect(() => {
     const onZoomEnd = () => {
-      console.log('Current zoom level:', map.getZoom());
+      // console.log('Current zoom level:', map.getZoom());
     };
     
     // Log inicial
-    console.log('Initial zoom level:', map.getZoom());
+    // console.log('Initial zoom level:', map.getZoom());
     
     // Escuchar cambios de zoom
     map.on('zoomend', onZoomEnd);
@@ -71,7 +72,7 @@ const ZoomLogger: React.FC = () => {
   return null;
 };
 
-const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
+const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType, showDetailedMap }) => {
   const [voronoiData, setVoronoiData] = useState<VoronoiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -86,7 +87,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
     setLoading(true);
     setError('');
     try {
-      console.log('Requesting Voronoi map data for timestamp:', timestamp, 'market:', market, 'dataType:', dataType);
+      // console.log('Requesting Voronoi map data for timestamp:', timestamp, 'market:', market, 'dataType:', dataType);
       
       // Esperar un poco si es la primera carga
       if (!isRetry && retryCount === 0) {
@@ -94,7 +95,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
       }
       
       const data = await priceService.getVoronoiMap(timestamp, market, dataType as DataType);
-      console.log('Loaded Voronoi data:', data.features?.length, 'polygons');
+      // console.log('Loaded Voronoi data:', data.features?.length, 'polygons');
       
       if (!data.features || data.features.length === 0) {
         // Si no hay datos y es la primera vez, intentar de nuevo
@@ -136,7 +137,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
 
 
   const getPriceColor = (value: number | null): string => {
-    if (value === null || value === undefined) return '#ffffff';
+    if (value === null || value === undefined || (showDetailedMap && dataType === DataType.NODES)) return '#ffffff';
     
     if (value < -20) return '#00008B';
     if (value < -10) return '#0000CD';
@@ -154,12 +155,21 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
   };
 
   const getPolygonStyle = (feature: VoronoiFeature) => {
+    if (!showDetailedMap) {
     return {
       fillColor: getPriceColor(feature.properties.value ?? feature.properties.price),
-      fillOpacity: 0.7,
       color: '#666',
       weight: 0.5,
+      fillOpacity: 0.7,
     };
+  }else{
+    return {
+      fillColor: getPriceColor(feature.properties.value ?? feature.properties.price),
+      color: '#666',
+      weight: 0.5,
+      fillOpacity: 0.2,
+    };
+  }
   };
 
   const onEachFeature = (feature: any, layer: any) => {
@@ -209,6 +219,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
   const createPriceIcon = (value: number | string | null): L.DivIcon => {
     let displayValue: string;
     let textColor: string;
+    let text_opacity: number;
     
     // Manejar diferentes tipos de valores
     if (value === null || value === undefined) {
@@ -228,6 +239,12 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
       textColor = '#999';
     }
 
+    if (showDetailedMap && dataType === DataType.NODES) {
+      text_opacity = 0.3;
+    } else {
+      text_opacity = 1.0;
+    }
+
     const charWidth = 8;
     const totalWidth = displayValue.length * charWidth;
     const anchorX = totalWidth / 2;
@@ -240,6 +257,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
         color: ${textColor};
         white-space: nowrap;
         pointer-events: none;
+        opacity: ${text_opacity};
       ">${displayValue}</div>`,
       iconSize: [totalWidth, 14],
       iconAnchor: [anchorX - 1, 7],
@@ -269,7 +287,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
     return (
       <Box p={2}>
         <Typography color="warning.main" gutterBottom>
-          No nodes with data found for the selected timestamp.
+          No grid with data found for the selected timestamp.
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Please select a different date/hour or populate the database.
@@ -300,7 +318,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
     { color: '#FF6347', label: '70 to 80' },
     { color: '#FF0000', label: '80 to 90' },
     { color: '#8B0000', label: '> 90' },
-    { color: '#FFFFFF', label: 'N/A' },
+    { color: '#FFFFFF', label: 'N/D' },
   ];
 
   const colorMapTags = {
@@ -313,7 +331,9 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
   }
 
   return (
+    
     <Box sx={{ height: '500px', width: '100%', display: 'flex', gap: 2, position: 'relative' }}>
+      
       <Box sx={{ flex: 1, position: 'relative' }}>
         {/* Logo flotante */}
         <Box
@@ -351,11 +371,18 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
         >
           <MapInvalidator />
           <ZoomLogger />
-          <TileLayer
+          {showDetailedMap && (
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+          )}
+
+          {!showDetailedMap &&(<TileLayer
             attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
             opacity={1}
-          />
+          />)}
           {voronoiData && (
             <GeoJSON
               data={voronoiData as any}
@@ -420,8 +447,16 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType }) => {
                   backgroundColor: item.color,
                   border: '1px solid #333',
                   flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  // fontWeight: 'bold',
+                  fontSize: '0.5rem',
+                  color: '#333',
                 }}
-              />
+              >
+                {item.color.toLowerCase() === '#ffffff' || item.color.toLowerCase() === 'white' ? '−' : null}
+              </Box>
               <Typography 
                 variant="caption" 
                 sx={{ fontSize: '0.75rem', color: '#333' }}

@@ -3,6 +3,7 @@ import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { priceService } from '../../services/priceService';
 import { DataType } from '../../types';
+import { NameType } from 'recharts/types/component/DefaultTooltipContent';
 
 interface Props {
   nodeId: number;
@@ -47,7 +48,7 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
     try {
       const comparison = await priceService.getMonthlyComparison(nodeId, year, day, hour, dataType);
       setData(comparison);
-      console.log('Monthly Comparison Data:', comparison);
+      // console.log('Monthly Comparison Data:', comparison);
     } catch (err: any) {
       setError('Failed to load monthly comparison');
       console.error(err);
@@ -87,7 +88,20 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
     value: item.value,
   }));
 
+  const isReserveNode  = () => {
+    // console.log('Checking if node is reserve:', nodeId);
+    if (!nodeId) return false;
+    if  ([1057,  1058, 1059, 1060, 1066].includes(nodeId)) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   const getLabel = () => {
+    if (isReserveNode()) {
+      return '[$/MWh]'
+    }
     switch (dataType) {
       case DataType.PRICE:
         return 'LMPs [$/MWh]';
@@ -100,6 +114,9 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
     }
   };
   const getSubtitle = () => {
+    if (isReserveNode()) {
+      return 'Historical values for ERCOT Ancillary Services'
+    }
     switch (dataType) {
       case DataType.PRICE:
         return 'Historical values for all ERCOT settlements points located within the geographic area of the selected grid cell';
@@ -141,16 +158,16 @@ const PriceEvolutionChart: React.FC<Props> = ({ nodeId, year, day, hour, dataTyp
               }
               return label;
             }}
-            formatter={(value: any) => {
-              if (value == null) return 'Sin datos';
+            formatter={(value: any, name:NameType|undefined) => {
+              if (value == null) return ['Sin datos'];
               const unit = dataType === DataType.NEGATIVE_HOURS ? 'Hours' : '$/MWh';
-              return `${value.toFixed(2)} ${unit}`;
+              return [`${value.toFixed(2)} ${unit}`];
             }}
             separator=''
           />
           <Legend />
           <Line 
-            type="monotone" 
+            type="linear" 
             dataKey="value" 
             stroke="#1976d2" 
             name={getLabel()}

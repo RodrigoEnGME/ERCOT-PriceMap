@@ -118,6 +118,12 @@ export interface AvailableYears {
   markets: string[];
 }
 
+export interface AvailableMonths {
+  year: number;
+  months: number[];
+  markets: string[];
+}
+
 export interface HourlySnapshot {
   node_id: number;
   code: string;

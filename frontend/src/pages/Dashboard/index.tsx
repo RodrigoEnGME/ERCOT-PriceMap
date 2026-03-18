@@ -12,7 +12,8 @@ import {
   CircularProgress,
   ToggleButtonGroup,
   ToggleButton,
-  Divider
+  Divider,
+  Button,
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ViewListIcon from '@mui/icons-material/ViewList';
@@ -34,8 +35,8 @@ const DRAWER_WIDTH = 280;
 type ViewMode = 'list' | 'grid';
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout);
+  // const navigate = useNavigate();
+  // const logout = useAuthStore((state) => state.logout);
   const { 
     selectedYear, 
     selectedMonth, 
@@ -51,11 +52,12 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<AggregatedStats | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [showDetailedMap, setShowDetailedMap] = useState(false);
 
   useEffect(() => {
     const checkReady = () => {
       if (selectedYear && selectedMonth && market && dataType) {
-        console.log('Dashboard ready with:', { selectedYear, selectedMonth, market, dataType });
+        // console.log('Dashboard ready with:', { selectedYear, selectedMonth, market, dataType });
         setIsReady(true);
         loadStats();
       }
@@ -67,8 +69,8 @@ const Dashboard: React.FC = () => {
   const loadStats = async () => {
     if (!selectedNode1 || !selectedYear) return;
 
-    const startDate = new Date(selectedYear, 0, 1);
-    const endDate = new Date(selectedYear + 1, 0, 1);
+    const startDate = new Date(Date.UTC(selectedYear, 0, 1));
+    const endDate = new Date(Date.UTC(selectedYear + 1, 0, 1));
 
     try {
       const aggregatedStats = await priceService.getAggregatedStats(
@@ -78,16 +80,16 @@ const Dashboard: React.FC = () => {
         dataType
       );
       setStats(aggregatedStats);
-      console.log('Loaded stats:', aggregatedStats);
+      // console.log('Loaded stats:', aggregatedStats);
     } catch (err) {
       console.error('Failed to load stats', err);
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate(`${START_URL}/login`, { replace: true });
-  };
+  // const handleLogout = () => {
+    // logout();
+    // navigate(`${START_URL}/login`, { replace: true });
+  // };
 
   const handleViewModeChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -99,21 +101,21 @@ const Dashboard: React.FC = () => {
   };
 
   const getHeatmapTimestamp = (): string => {
-    const year = selectedYear || new Date().getFullYear();
+    const year = selectedYear || 2025;
     const month = (selectedMonth || 1) - 1;
-    const date = new Date(year, month, 1, 1, 0, 0, 0);
+    const date = new Date(Date.UTC(year, month, 1, 1, 0, 0, 0));
     return date.toISOString();
   };
 
   const getDateRange = () => {
     if (!selectedYear) return { start: '', end: '' };
     
-    const start = new Date(selectedYear, (selectedMonth || 1) - 1, selectedDay || 1);
+    const start = new Date(Date.UTC(selectedYear, (selectedMonth || 1) - 1, selectedDay || 1));
     const end = selectedMonth && selectedDay
-      ? new Date(selectedYear, (selectedMonth || 1) - 1, selectedDay || 1, 23, 59, 59)
+      ? new Date(Date.UTC(selectedYear, (selectedMonth || 1) - 1, selectedDay || 1, 23, 59, 59))
       : selectedMonth
-      ? new Date(selectedYear, selectedMonth, 0, 23, 59, 59)
-      : new Date(selectedYear, 11, 31, 23, 59, 59);
+      ? new Date(Date.UTC(selectedYear, selectedMonth, 0, 23, 59, 59))
+      : new Date(Date.UTC(selectedYear, 11, 31, 23, 59, 59));
     
     return {
       start: start.toISOString(),
@@ -124,8 +126,8 @@ const Dashboard: React.FC = () => {
   const getYearRange = () => {
     if (!selectedYear) return { start: '', end: '' };
     
-    const start = new Date(selectedYear, 0, 1, 0, 0, 0);
-    const end = new Date(selectedYear, 11, 31, 23, 59, 59);
+    const start = new Date(Date.UTC(selectedYear, 0, 1, 0, 0, 0));
+    const end = new Date(Date.UTC(selectedYear, 11, 31, 23, 59, 59));
     
     return {
       start: start.toISOString(),
@@ -136,6 +138,30 @@ const Dashboard: React.FC = () => {
   const dateRange = getDateRange();
   const yearRange = getYearRange();
 
+  const getSubtitle = () => {
+    switch (dataType) {
+      case DataType.PRICE:
+        return 'LMPs monthly average of all ERCOT settlements points located within the geographic area of each grid cell';
+      case DataType.SOLAR_CAPTURE:
+        return 'Energy Selling prices, monthly average, for solar generators located within the geographic area of each grid cell';
+      case DataType.WIND_CAPTURE:
+        return 'Energy Selling prices, monthly average, for wind generators located within the geographic area of each grid cell';
+      case DataType.NEGATIVE_HOURS:
+        return 'Number of hours with negative LMPs, monthly average, for all ERCOT settlements points within the geographic area of the grid cell';
+      case DataType.NODES:
+        return 'Number that identifies each grid cell, including Hub Prices, LZ prices and Reserves prices';
+    }
+  };
+
+  const isReserveNode  = () => {
+    // console.log('Checking if node is reserve:', selectedNode1);
+    if (!selectedNode1) return false;
+    if  ([1057,  1058, 1059, 1060, 1066].includes(selectedNode1)) {
+      return true;
+    } else {
+      return false;
+    }
+  };
   if (!isReady) {
     return (
       <Box sx={{ display: 'flex' }}>
@@ -144,9 +170,9 @@ const Dashboard: React.FC = () => {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               ERCOT Pricing Dashboard
             </Typography>
-            <IconButton color="inherit" onClick={handleLogout}>
+            {/* <IconButton color="inherit" onClick={handleLogout}>
               <LogoutIcon />
-            </IconButton>
+            </IconButton> */}
           </Toolbar>
         </AppBar>
         
@@ -186,12 +212,48 @@ const Dashboard: React.FC = () => {
         <Typography variant="h6" gutterBottom>
           Grid Cell Price Heatmap
         </Typography>
+        <Typography variant="body2" component="div" sx={{ flexGrow: 1 }}>
+          {getSubtitle()}
+        </Typography>
+        
         <PriceHeatmap 
           key={`${getHeatmapTimestamp()}-${market}-${dataType}`} 
           timestamp={getHeatmapTimestamp()} 
           market={market} 
           dataType={dataType} 
+          showDetailedMap={showDetailedMap}
         />
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end', mt: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                Detailed Map View:
+            </Typography>
+            <Button
+              variant={!showDetailedMap ? "contained" : "outlined"}
+              onClick={() => setShowDetailedMap(false)}
+              // fullWidth
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.85rem',
+                py: 1
+              }}
+            >
+              Plain
+            </Button>
+            <Button
+              variant={showDetailedMap ? "contained" : "outlined"}
+              onClick={() => setShowDetailedMap(true)}
+              // fullWidth
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.85rem',
+                py: 1
+              }}
+            >
+              Detailed
+            </Button>
+          </Box>
+        </Box>
       </Paper>
 
       <Box sx={{ mb: 3 }}>
@@ -203,14 +265,14 @@ const Dashboard: React.FC = () => {
       </Box>
 
       <Grid container spacing={2}>
-        {selectedNode1 && selectedYear && (dataType!==DataType.NODES) &&(
+          {selectedNode1 && selectedYear && (dataType!==DataType.NODES) &&(
           <>
             <Grid size={{ xs: 12 }}>
               <PriceEvolutionChart
                 nodeId={selectedNode1}
                 year={selectedYear}
                 day={selectedDay || 1}
-                hour={selectedHour || 4}
+                hour={selectedHour || 1}
                 dataType={dataType}
               />
             </Grid>
@@ -221,7 +283,7 @@ const Dashboard: React.FC = () => {
                 dataType={dataType}
               />
             </Grid>
-            {selectedNode2 && (dataType===DataType.PRICE || dataType===DataType.SOLAR_CAPTURE || dataType===DataType.WIND_CAPTURE) && (
+            {selectedNode2 && (dataType===DataType.PRICE || dataType===DataType.SOLAR_CAPTURE || dataType===DataType.WIND_CAPTURE) && (!isReserveNode()) && (
               <Grid size={{ xs: 12 }}>
                 <CongestionChart
                   node1Id={selectedNode1}
@@ -329,7 +391,7 @@ const Dashboard: React.FC = () => {
                 nodeId={selectedNode1}
                 year={selectedYear}
                 day={selectedDay || 1}
-                hour={selectedHour || 4}
+                hour={selectedHour || 1}
                 dataType={dataType}
               />
             </Box>
@@ -389,9 +451,9 @@ const Dashboard: React.FC = () => {
             </ToggleButton>
           </ToggleButtonGroup> */}
 
-          <IconButton color="inherit" onClick={handleLogout}>
+          {/* <IconButton color="inherit" onClick={handleLogout}>
             <LogoutIcon />
-          </IconButton>
+          </IconButton> */}
         </Toolbar>
       </AppBar>
 

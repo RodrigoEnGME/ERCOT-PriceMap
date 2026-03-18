@@ -13,7 +13,7 @@ import {
 import { useFilterStore } from '../../store';
 import { nodeService } from '../../services/nodeService';
 import { priceService } from '../../services/priceService';
-import { Node, DataType, AggregationType } from '../../types';
+import { Node, DataType, AggregationType, AvailableMonths } from '../../types';
 import DownloadIcon from '@mui/icons-material/Download';
 import { exportService } from '../../services/exportService';
 
@@ -40,7 +40,10 @@ const MONTHS = [
 
 const FilterPanel: React.FC<Props> = ({ onExport }) => {
   const [nodes, setNodes] = useState<Node[]>([]);
+  const [filteredNodes, setFilteredNodes] = useState<Node[]>([]);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [availableMonths, setAvailableMonths] = useState<number[]>([]);
+  const [isLoadingMonths, setIsLoadingMonths] = useState(false);
   const [markets, setMarkets] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false); 
 
@@ -80,14 +83,18 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
       
       // 2. Setear valores por defecto de fechas
       const defaultYear = 2025;
-      const defaultMonth = 12;
+      // 2.1. Cargar meses disponibles para el año por defecto
+      const monthsData = await priceService.getAvailableMonths(defaultYear);
+      setAvailableMonths(monthsData.months);
+
+      const defaultMonth = monthsData.months.includes(12) ? 12 : monthsData.months[monthsData.months.length - 1];
       
       setYear(defaultYear);
       setMonth(defaultMonth);
       setDay(1);
       setHour(0);
       
-      const defaultDate = new Date(defaultYear, defaultMonth - 1, 1, 0, 0, 0);
+      const defaultDate = new Date(Date.UTC(defaultYear, defaultMonth - 1, 1, 0, 0, 0));
       setDate(defaultDate);
       
       // 3. Luego cargar nodos
@@ -105,9 +112,10 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
 
   const loadNodes = async () => {
     try {
-      const nodeList = await nodeService.getNodes({ limit: 161 });
-      console.log('Loaded nodes:', nodeList.length, 'nodes');
+      const nodeList = await nodeService.getNodes({ limit: 166 });
+      // console.log('Loaded nodes:', nodeList.length, 'nodes');
       setNodes(nodeList);
+      setFilteredNodes(nodeList.filter(node => node.zone !== 'Reserves'));
       
       // Setear nodos por defecto si hay al menos 2 nodos
       if (nodeList.length >= 19) {
@@ -141,14 +149,28 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
   };
 
   // Actualizar fecha cuando cambia año o mes
-  const handleYearChange = (year: number) => {
+  const handleYearChange = async (year: number) => {
     setYear(year);
+    setMonth(undefined as any);  // limpiar mes al cambiar año
     setDay(1);
     setHour(0);
-    
-    // Actualizar selectedDate con día 1, hora 0
-    const newDate = new Date(year, (selectedMonth || 1) - 1, 1, 0, 0, 0);
-    setDate(newDate);
+
+    setIsLoadingMonths(true);
+    try {
+      const data = await priceService.getAvailableMonths(year);
+      setAvailableMonths(data.months);
+      // Auto-seleccionar el primer mes disponible
+      if (data.months.length > 0) {
+        const firstMonth = data.months[0];
+        setMonth(firstMonth);
+        setDate(new Date(year, firstMonth - 1, 1, 0, 0, 0));
+      }
+    } catch (err) {
+      console.error('Failed to load available months', err);
+      setAvailableMonths([]);
+    } finally {
+      setIsLoadingMonths(false);
+    }
   };
 
   const handleMonthChange = (month: number) => {
@@ -157,7 +179,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
     setHour(0);
     
     // Actualizar selectedDate con día 1, hora 0
-    const newDate = new Date(selectedYear || new Date().getFullYear(), month - 1, 1, 0, 0, 0);
+    const newDate = new Date(Date.UTC(selectedYear || new Date().getFullYear(), month - 1, 1, 0, 0, 0));
     setDate(newDate);
   };
 
@@ -170,8 +192,8 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
     const nodeIds = [selectedNode1];
     if (selectedNode2) nodeIds.push(selectedNode2);
 
-    const startDate = new Date(selectedYear || new Date().getFullYear(), 0, 1);
-    const endDate = new Date((selectedYear || new Date().getFullYear()) + 1, 0, 1);
+    const startDate = new Date(Date.UTC(selectedYear || new Date().getFullYear(), 0, 1));
+    const endDate = new Date(Date.UTC((selectedYear || new Date().getFullYear()) + 1, 0, 1));
 
     try {
       const blob = await exportService.exportToExcel({
@@ -233,8 +255,9 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           value={selectedMonth || ''}
           label="Month"
           onChange={(e) => handleMonthChange(e.target.value as number)}
+          disabled={isLoadingMonths || availableMonths.length === 0}
         >
-          {MONTHS.map((month) => (
+          {MONTHS.filter((m) => availableMonths.includes(m.value)).map((month) => (
             <MenuItem key={month.value} value={month.value}>
               {month.label}
             </MenuItem>
@@ -252,7 +275,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
         >
           {markets.map((m) => (
             <MenuItem key={m} value={m}>
-              {m}
+              DAM
             </MenuItem>
           ))}
         </Select>
@@ -288,7 +311,7 @@ const FilterPanel: React.FC<Props> = ({ onExport }) => {
           <MenuItem value="">
             <em>None</em>
           </MenuItem>
-          {nodes.map((node) => (
+          {filteredNodes.map((node) => (
             <MenuItem key={node.id} value={node.id}>
               #{node.name.includes('#') ? node.name.split('#')[1].trim() : node.name}
             </MenuItem>

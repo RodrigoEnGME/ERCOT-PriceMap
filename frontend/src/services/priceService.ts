@@ -5,6 +5,7 @@ import {
   CongestionData,
   AggregatedStats,
   AvailableYears,
+  AvailableMonths,
   HourlySnapshot,
   DataType,
 } from '../types';
@@ -12,6 +13,11 @@ import {
 export const priceService = {
   async getAvailableYears(): Promise<AvailableYears> {
     const response = await apiClient.get<AvailableYears>('/prices/available-years');
+    return response.data;
+  },
+
+  async getAvailableMonths(year: number): Promise<AvailableMonths> {
+    const response = await apiClient.get<AvailableMonths>(`/prices/available-months/${year}`);
     return response.data;
   },
 
