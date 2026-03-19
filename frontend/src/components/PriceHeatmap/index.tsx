@@ -72,12 +72,26 @@ const ZoomLogger: React.FC = () => {
   return null;
 };
 
+const ZoomTracker: React.FC<{ onZoomChange: (zoom: number) => void }> = ({ onZoomChange }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    onZoomChange(map.getZoom()); // zoom inicial
+    const onZoomEnd = () => onZoomChange(map.getZoom());
+    map.on('zoomend', onZoomEnd);
+    return () => { map.off('zoomend', onZoomEnd); };
+  }, [map, onZoomChange]);
+
+  return null;
+};
+
 const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType, showDetailedMap }) => {
   const [voronoiData, setVoronoiData] = useState<VoronoiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const mapRef = useRef<L.Map | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [currentZoom, setCurrentZoom] = useState(5.5);
 
   useEffect(() => {
     loadData();
@@ -216,6 +230,12 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType, showDetail
   };
 
   // Crear icono de texto personalizado
+  const getDecimalsByZoom = (zoom: number): number => {
+    if (zoom < 6)   return 0;
+    if (zoom < 6.5) return 1;
+    return 2;
+  };
+
   const createPriceIcon = (value: number | string | null): L.DivIcon => {
     let displayValue: string;
     let textColor: string;
@@ -230,10 +250,10 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType, showDetail
       displayValue = value;
       textColor = '#000';
     } else if (typeof value === 'number' && !isNaN(value)) {
-      // Para números válidos
-      displayValue = Math.round(value).toString();
+      const decimals = getDecimalsByZoom(currentZoom); // usa el estado
+      displayValue = value.toFixed(decimals);          // en lugar de Math.round
       textColor = value < 50 ? '#000' : '#fff';
-    } else {
+    }else {
       // Para NaN o valores inválidos
       displayValue = '-';
       textColor = '#999';
@@ -249,20 +269,23 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType, showDetail
     const totalWidth = displayValue.length * charWidth;
     const anchorX = totalWidth / 2;
     
+    const ICON_WIDTH = 64; // suficiente para "-45.32" o "120"
+
     return L.divIcon({
       className: 'price-label',
       html: `<div style="
         font-size: 12px;
-        font-weight: bold;
         color: ${textColor};
         white-space: nowrap;
         pointer-events: none;
         opacity: ${text_opacity};
+        text-align: center;
+        width: ${ICON_WIDTH}px;
       ">${displayValue}</div>`,
-      iconSize: [totalWidth, 14],
-      iconAnchor: [anchorX - 1, 7],
+      iconSize: [ICON_WIDTH, 14],
+      iconAnchor: [ICON_WIDTH / 2, 7],
     });
-  };
+      };
 
   if (loading) {
     return (
@@ -371,6 +394,7 @@ const PriceHeatmap: React.FC<Props> = ({ timestamp, market, dataType, showDetail
         >
           <MapInvalidator />
           <ZoomLogger />
+          <ZoomTracker onZoomChange={setCurrentZoom} />
           {showDetailedMap && (
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

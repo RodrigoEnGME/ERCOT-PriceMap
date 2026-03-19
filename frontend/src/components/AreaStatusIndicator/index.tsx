@@ -41,7 +41,7 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
   };
 
   const getPriceColor = (value: number | null): string => {
-    if (value === null || value === undefined) return '#CCCCCC'; // Gris para sin datos
+    if (value === null || value === undefined) return '#FFFFFF'; // Gris para sin datos
     
     if (value < -20) return '#00008B';
     if (value < -10) return '#0000CD';
@@ -62,8 +62,8 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
   // Determinar color de texto según fondo
   const getTextColor = (value: number | null): string => {
     if (value === null || value === undefined) return '#666';
-    if (value < 50) return '#000'; // Negro para fondos claros
-    return '#fff'; // Blanco para fondos oscuros
+    if (value < 10 || value > 80) return '#fff'; // Blanco para fondos oscuros
+    return '#000'; // Negro para fondos claros
   };
 
   if (loading) {
@@ -149,12 +149,13 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
     }
   };
 
-  const StatusCircle: React.FC<{ node: NodeStatus }> = ({ node }) => {
+  const StatusCircle: React.FC<{ node: NodeStatus , color?: string }> = ({ node, color }) => {
     const displayValue = dataType === DataType.NODES 
     ? (gridCellNumber[node.name as keyof typeof gridCellNumber] || '-')
-    : (node.value !== null ? Math.round(node.value) : '-');
+    : (node.value !== null ? node.value.toFixed(2) : '-');
     const colorValue = dataType === DataType.NODES 
-    ? (gridCellNumber[node.name as keyof typeof gridCellNumber] || null)
+    // ? (gridCellNumber[node.name as keyof typeof gridCellNumber] || null)
+    ? null
     : (node.value !== null ? Math.round(node.value) : null);
     
     return (
@@ -168,10 +169,10 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
       >
         <Box
           sx={{
-            width: 30,
-            height: 30,
+            width: 50,
+            height: 50,
             borderRadius: '50%',
-            backgroundColor: getPriceColor(colorValue),
+            backgroundColor: color ? color : getPriceColor(colorValue),
             border: '2px solid #333',
             flexShrink: 0,
             display: 'flex',
@@ -179,7 +180,7 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
             justifyContent: 'center',
             fontWeight: 'bold',
             fontSize: '0.75rem',
-            color: getTextColor(colorValue),
+            color: color ? getTextColor(20) : getTextColor(colorValue),
           }}
         >
           {displayValue}
@@ -204,8 +205,8 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
       >
         <Box
           sx={{
-            width: 30,
-            height: 30,
+            width: 40,
+            height: 40,
             borderRadius: '50%',
             backgroundColor: getPriceColor(gridCellNumber[node as keyof typeof gridCellNumber]),
             border: '2px solid #333',
@@ -270,7 +271,7 @@ const AreaStatusIndicator: React.FC<Props> = ({ timestamp, market, dataType = Da
             <Box sx={{ display: 'flex', justifyContent: 'space-evenly' }}>
               <Box sx={{ minWidth: 180 }}>
                 {reserves.map((node: NodeStatus) => (
-                  <StatusCircle key={node.node_id} node={node} />
+                  <StatusCircle key={node.node_id} node={node} color='#FFFFFF'/>
                 ))}
                 {/* {dataType === DataType.NODES && reservesNames.map((node: string) => (
                   <ReservesCircle key={node} node={node} />
